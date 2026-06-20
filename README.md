@@ -1,6 +1,6 @@
 # Hotel Booking
 
-A simple PHP hotel booking website for XAMPP.
+A simple PHP hotel booking website .
 
 ## Project Structure
 
@@ -12,6 +12,6 @@ A simple PHP hotel booking website for XAMPP.
 ## Setup
 
 1. Copy `.env.example` to `.env` and update the database values if needed.
-2. Import `sql/hotel_booking.sql` into MySQL or MariaDB.
+2. Import `sql/hotel_booking.sql` into MySQL or MariaDB .
 3. Place the project in your XAMPP `htdocs` folder.
-4. Visit `http://localhost/Hotel_Booking/`.
+4. Visit `http://localhost/Hotel_Booking/` to run the website.
