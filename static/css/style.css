@@ -1,0 +1,360 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+header {
+    background: #35424a;
+    color: #ffffff;
+    padding: 5px 0;
+    text-align: center;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+footer {
+    text-align: center;
+    padding: 10px 0;
+    background: #35424a;
+    color: #ffffff;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Home Page Styles */
+
+/* Hero Section */
+.hero {
+    background-image: url('../images/hero.jpg'); /* Add a hero image */
+    background-size: cover;
+    background-position: center;
+    color: #ffffff;
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.hero h2 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+.cta-button {
+    background: #35424a;
+    color: #ffffff;
+    padding: 15px 30px;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.cta-button:hover {
+    background: #2c3e50;
+}
+
+/* Featured Rooms Section */
+.featured-rooms {
+    padding: 40px 20px;
+    background: #f9f9f9;
+    text-align: center;
+}
+
+.featured-rooms h2 {
+    margin-bottom: 20px;
+}
+
+.room {
+    display: inline-block;
+    width: 30%;
+    margin: 10px;
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.room img {
+    width: 100%;
+    height: auto;
+}
+
+.room h3 {
+    margin: 10px 0;
+}
+
+.room p {
+    padding: 0 10px;
+}
+
+/* Amenities Section */
+.amenities {
+    padding: 40px 20px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.amenities h2 {
+    margin-bottom: 20px;
+}
+
+.amenities ul {
+    list-style: none;
+    padding: 0;
+}
+
+.amenities li {
+    margin: 10px 0;
+}
+
+/* Testimonials Section */
+.testimonials {
+    padding: 40px 20px;
+    background: #f9f9f9;
+    text-align: center;
+}
+
+.testimonials h2 {
+    margin-bottom: 20px;
+}
+
+blockquote {
+    font-style: italic;
+    margin: 20px 0;
+}
+
+cite {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+/* About Page Styles */
+
+/* Our Story Section */
+.our-story {
+    padding: 40px 20px;
+    background: #f9f9f9;
+    text-align: center;
+}
+
+.our-story h2 {
+    margin-bottom: 20px;
+}
+
+/* Our Values Section */
+.our-values {
+    padding: 40px 20px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.our-values h2 {
+    margin-bottom: 20px;
+}
+
+.our-values ul {
+    list-style: none;
+    padding: 0;
+}
+
+.our-values li {
+    margin: 10px 0;
+}
+
+/* Meet Our Team Section */
+.meet-our-team {
+    padding: 40px 20px;
+    background: #f9f9f9;
+    text-align: center;
+}
+
+.meet-our-team h2 {
+    margin-bottom: 20px;
+}
+
+.team-member {
+    display: inline-block;
+    width: 30%;
+    margin: 10px;
+    background: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.team-member img {
+    width: 100%;
+    height: auto;
+}
+
+.team-member h3 {
+    margin: 10px 0;
+}
+
+/* Our Facilities Section */
+.our-facilities {
+    padding: 40px  20px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.our-facilities h2 {
+    margin-bottom: 20px;
+}
+
+.our-facilities ul {
+    list-style: none;
+    padding: 0;
+}
+
+.our-facilities li {
+    margin: 10px 0;
+}
+/* Booking Page Styles */
+
+/* Booking Form Section */
+.booking-form {
+    padding: 40px 20px;
+    background: #ffffff;
+    text-align: center;
+    border-radius: 8px; /* Rounded corners for the form */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    max-width: 600px; /* Limit the width of the form */
+    margin: 20px auto; /* Center the form on the page */
+}
+
+.booking-form h2 {
+    margin-bottom: 20px;
+    font-size: 2em; /* Larger font size for the heading */
+    color: #35424a; /* Darker color for the heading */
+}
+
+.form-group {
+    margin: 15px 0; /* Space between form groups */
+    text-align: left; /* Align labels and inputs to the left */
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold; /* Bold labels for better readability */
+}
+
+input[type="date"],
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+select {
+    width: 100%;
+    padding: 12px; /* Increased padding for better touch targets */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Include padding in width calculation */
+    margin-bottom: 15px; /* Space below each input */
+}
+
+button.cta-button {
+    background: #35424a;
+    color: #ffffff;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em; /* Slightly larger font size for the button */
+    transition: background 0.3s; /* Smooth transition for hover effect */
+}
+
+button.cta-button:hover {
+    background: #2c3e50;
+}
+/* Contact Page Styles */
+
+/* Contact Info Section */
+.contact-info {
+    padding: 40px 20px;
+    background: #f9f9f9;
+    text-align: center;
+    border-radius: 8px; /* Rounded corners for the section */
+    margin: 20px auto; /* Center the section */
+    max-width: 600px; /* Limit the width of the section */
+}
+
+/* Contact Form Section */
+.contact-form {
+    padding: 40px 20px;
+    background: #ffffff;
+    text-align: center;
+    border-radius: 8px; /* Rounded corners for the form */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    max-width: 600px; /* Limit the width of the form */
+    margin: 20px auto; /* Center the form on the page */
+}
+
+.contact-form h2 {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin: 15px 0; /* Space between form groups */
+    text-align: left; /* Align labels and inputs to the left */
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold; /* Bold labels for better readability */
+}
+
+input[type="text"],
+input[type="email"],
+textarea {
+    width: 100%;
+    padding: 12px; /* Increased padding for better touch targets */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Include padding in width calculation */
+    margin-bottom: 15px; /* Space below each input */
+ transition: border-color 0.3s; /* Smooth transition for border color */
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus {
+    border-color: #35424a; /* Change border color on focus */
+    outline: none; /* Remove default outline */
+}
+
+.cta-button {
+    background: #35424a; /* Button background color */
+    color: #ffffff; /* Button text color */
+    padding: 12px 20px; /* Button padding */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Rounded corners for the button */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background 0.3s; /* Smooth transition for background color */
+}
+
+.cta-button:hover {
+    background: #2c3e50; /* Darker background on hover */
+}
