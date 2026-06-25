@@ -3,81 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Booking - About</title>
-    <link rel="stylesheet" href="<?= asset('css/style.css'); ?>">
+    <title>About GSS Hotel</title>
+    <link rel="preload" as="image" href="/static/images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg" fetchpriority="high">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/about.css">
 </head>
-<body>
-    <header>
-        <h1>About GSS Hotel</h1>
-        <nav>
+<body class="site-page about-page">
+    <header class="site-header">
+        <a class="brand" href="index.html" aria-label="GSS Hotel home">
+            <span class="brand-mark">GSS</span>
+            <span class="brand-copy">Hotel</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary navigation">
             <ul>
-                <li><a href="<?= url_for(); ?>">Home</a></li>
-                <li><a href="<?= url_for('about'); ?>">About</a></li>
-                <li><a href="<?= url_for('booking'); ?>">Booking</a></li>
-                <li><a href="<?= url_for('contact'); ?>">Contact Us</a></li>
-               
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+                <li><a href="booking.html">Booking</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
             </ul>
         </nav>
     </header>
-    
+
     <main>
-        <!-- Our Story Section -->
-        <section class="our-story">
-            <h2>Our Story</h2>
-            <p>Founded in 2020, our hotel has been dedicated to providing exceptional service and unforgettable experiences. Nestled in the heart of the city, we offer a perfect blend of luxury and comfort.</p>
-            <p>Our mission is to create a home away from home for our guests, ensuring that every stay is memorable. We pride ourselves on our attention to detail and commitment to excellence.</p>
-        </section>
-
-        <!-- Our Values Section -->
-        <section class="our-values">
-            <h2>Our Values</h2>
-            <ul>
-                <li><strong>Hospitality:</strong> We treat our guests like family.</li>
-                <li><strong>Integrity:</strong> We uphold the highest standards of honesty and transparency.</li>
-                <li><strong>Excellence:</strong> We strive for perfection in everything we do.</li>
-                <li><strong>Community:</strong> We believe in giving back to the community that supports us.</li>
-            </ul>
-        </section>
-
-        <!-- Meet Our Team Section -->
-        <section class="meet-our-team">
-            <h2>Meet Our Team</h2>
-            <div class="team-member">
-                <img src="<?= asset('images/team1.jpg'); ?>" alt="John Doe">
-                <h3>John Doe</h3>
-                <p>General Manager</p>
-                <p>With over 15 years of experience in the hospitality industry, John leads our team with passion and dedication.</p>
-            </div>
-            <div class="team-member">
-                <img src="<?= asset('images/team2.jpg'); ?>" alt="Jane Smith">
-                <h3>Jane Smith</h3>
-                <p>Head Chef</p>
-                <p>Jane creates culinary masterpieces that delight our guests, using only the freshest ingredients.</p>
-            </div>
-            <div class="team-member">
-                <img src="<?= asset('images/team3.jpg'); ?>" alt="Emily Johnson">
-                <h3>Emily Johnson</h3>
-                <p>Guest Relations Manager</p>
-                <p>Emily ensures that every guest feels welcome and valued, providing personalized service at every turn.</p>
+        <section class="page-hero about-hero">
+            <div class="page-hero-content">
+                <span class="section-kicker">About GSS Hotel</span>
+                <h1>Hospitality shaped by quiet luxury and thoughtful service.</h1>
+                <p>Since 2020, GSS Hotel has focused on stays that feel refined, calm, and easy from arrival to checkout.</p>
             </div>
         </section>
 
-        <!-- Our Facilities Section -->
-        <section class="our-facilities">
-            <h2>Our Facilities</h2>
-            <p>We offer a range of facilities to make your stay comfortable and enjoyable:</p>
-            <ul>
-                <li>Luxurious Rooms and Suites</li>
-                <li>State-of-the-Art Fitness Center</li>
-                <li>Relaxing Spa and Wellness Center</li>
-                <li>Outdoor Swimming Pool</li>
-                <li>On-Site Restaurant and Bar</li>
-            </ul>
+        <section class="split-section">
+            <div class="split-copy">
+                <span class="section-kicker">Our story</span>
+                <h2>A city hotel with a resort state of mind.</h2>
+                <p>We created GSS Hotel for guests who want the convenience of a central stay without losing the warmth, privacy, and ease of a true getaway.</p>
+                <p>Every detail is tuned for comfort: bright lounges, restful rooms, reliable service, and spaces that move naturally from work to relaxation.</p>
+            </div>
+            <img src="/static/images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg" alt="Elegant hotel lounge with classic details" loading="lazy" decoding="async">
+        </section>
+
+        <section class="values-section">
+            <div class="section-heading">
+                <span class="section-kicker">Our values</span>
+                <h2>What guests should feel every time they stay.</h2>
+            </div>
+            <div class="value-grid">
+                <article>
+                    <h3>Warm hospitality</h3>
+                    <p>Friendly, attentive service that makes every guest feel expected and cared for.</p>
+                </article>
+                <article>
+                    <h3>Quiet excellence</h3>
+                    <p>Clean spaces, polished details, and reliable support without unnecessary fuss.</p>
+                </article>
+                <article>
+                    <h3>Local connection</h3>
+                    <p>Easy access to the city, with calm hotel spaces to return to at the end of the day.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="image-feature-section">
+            <img src="/static/images/frames-for-your-heart-FqqiAvJejto-unsplash.jpg" alt="Luxury hotel suite with bright natural light" loading="lazy" decoding="async">
+            <div>
+                <span class="section-kicker">Facilities</span>
+                <h2>Everything expected from a modern stay.</h2>
+                <ul class="feature-list">
+                    <li>Luxurious rooms and suites</li>
+                    <li>Outdoor pool and lounge areas</li>
+                    <li>Fitness, spa, and wellness access</li>
+                    <li>On-site dining and room service</li>
+                </ul>
+            </div>
         </section>
     </main>
 
     <footer>
-        <p>&copy; 2026 Hotel Booking. All rights reserved.</p>
+        <p>&copy; 2026 GSS Hotel. All rights reserved.</p>
     </footer>
 </body>
 </html>

@@ -1,0 +1,119 @@
+.about-hero {
+    background-image: linear-gradient(90deg, rgba(20, 31, 35, 0.86), rgba(20, 31, 35, 0.38)), url("../images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg");
+}
+
+.split-section,
+.values-section,
+.image-feature-section {
+    padding: 80px 6vw;
+}
+
+.split-section,
+.image-feature-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 42px;
+    align-items: center;
+}
+
+.split-copy h2,
+.image-feature-section h2 {
+    margin: 0;
+    color: #203238;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2rem, 4vw, 4rem);
+    font-weight: 500;
+    line-height: 1.05;
+}
+
+.split-copy p,
+.image-feature-section p {
+    color: #5e6a6d;
+    font-size: 1.04rem;
+    line-height: 1.75;
+}
+
+.split-section img,
+.image-feature-section img {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.values-section {
+    background: #ffffff;
+}
+
+.value-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.value-grid article {
+    padding: 28px;
+    background: #f8f6f1;
+    border: 1px solid rgba(32, 50, 56, 0.1);
+    border-radius: 8px;
+}
+
+.value-grid h3 {
+    margin: 0;
+    color: #203238;
+}
+
+.value-grid p {
+    margin: 12px 0 0;
+    color: #5e6a6d;
+    line-height: 1.65;
+}
+
+.image-feature-section {
+    background: #203238;
+    color: #ffffff;
+}
+
+.image-feature-section h2 {
+    color: #ffffff;
+}
+
+.feature-list {
+    display: grid;
+    gap: 12px;
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.feature-list li {
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+    .split-section,
+    .image-feature-section {
+        grid-template-columns: 1fr;
+    }
+
+    .value-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .image-feature-section img {
+        min-height: 320px;
+    }
+}
+
+@media (max-width: 560px) {
+    .split-section,
+    .values-section,
+    .image-feature-section {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
