@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact GSS Hotel</title>
+    <link rel="preload" as="image" href="/static/images/rakabtw_-M3YuHIpgmSY-unsplash.jpg" fetchpriority="high">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/contact.css">
+</head>
+<body class="site-page contact-page">
+    <header class="site-header">
+        <a class="brand" href="index.html" aria-label="GSS Hotel home">
+            <span class="brand-mark">GSS</span>
+            <span class="brand-copy">Hotel</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary navigation">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="booking.html">Booking</a></li>
+                <li><a href="contact.html" class="active">Contact Us</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="page-hero contact-hero">
+            <div class="page-hero-content">
+                <span class="section-kicker">Contact us</span>
+                <h1>Questions, requests, or special plans? We are ready to help.</h1>
+                <p>Send a note and our guest relations team will get back to you with clear next steps.</p>
+            </div>
+        </section>
+
+        <section class="contact-layout">
+            <section class="contact-form modern-form-card">
+                <span class="section-kicker">Message the hotel</span>
+                <h2>Get in touch</h2>
+                <p id="contact-message" class="form-message" hidden></p>
+
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="6" required></textarea>
+                    </div>
+                    <button type="submit" class="primary-button form-submit">Send Message</button>
+                </form>
+            </section>
+
+            <aside class="contact-card">
+                <img src="/static/images/rod-long-2P_ifaetDm0-unsplash.jpg" alt="Elegant hotel reception lounge" loading="lazy" decoding="async">
+                <div class="contact-detail-grid">
+                    <div>
+                        <span>Guest support</span>
+                        <strong>24 hours daily</strong>
+                    </div>
+                    <div>
+                        <span>Reservations</span>
+                        <strong>Fast follow-up</strong>
+                    </div>
+                    <div>
+                        <span>Best for</span>
+                        <strong>Bookings, events, and stay requests</strong>
+                    </div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 GSS Hotel. All rights reserved.</p>
+    </footer>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
