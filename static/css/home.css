@@ -1,0 +1,123 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background-color: #fcfbf9;
+    color: #1a1a1a;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; height: auto; }
+
+h1, h2, h3 { font-weight: 300; letter-spacing: -0.01em; }
+
+header, footer, .featured-rooms, .amenities, .testimonials { padding: 6rem 4rem; }
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 4rem;
+    background: #fff;
+    border-bottom: 1px solid #f2efeb;
+}
+
+header h1 { font-size: 1.5rem; letter-spacing: 0.05em; text-transform: uppercase; }
+
+nav ul { display: flex; list-style: none; gap: 2.5rem; }
+
+nav a {
+    text-decoration: none;
+    color: #5a5a5a;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.25s;
+}
+
+nav a:hover { color: #1a1a1a; }
+
+.cta-button {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    background: #1a1a1a;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: background 0.3s;
+}
+
+.cta-button:hover { background: #3a3a3a; }
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 70vh;
+    padding: 4rem 2rem;
+}
+
+.hero h2 { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 1.5rem; }
+
+.hero p { font-size: clamp(1.1rem, 2vw, 1.25rem); color: #5a5a5a; margin-bottom: 2.5rem; }
+
+.featured-rooms { background: #fff; }
+
+.featured-rooms > h2, .amenities h2, .testimonials h2 { font-size: 2rem; text-align: center; margin-bottom: 4rem; }
+
+.featured-rooms .room {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 4rem;
+    margin-bottom: 6rem;
+}
+
+.featured-rooms .room:nth-child(even) img { order: 2; }
+
+.featured-rooms .room img { width: 100%; height: 450px; object-fit: cover; }
+
+.featured-rooms .room h3 { font-size: 1.75rem; margin-bottom: 1rem; }
+
+.featured-rooms .room p { color: #5a5a5a; margin-bottom: 2rem; max-width: 450px; }
+
+.amenities { background: #f9f8f6; text-align: center; }
+
+.amenities ul { display: flex; justify-content: center; flex-wrap: wrap; gap: 3rem; list-style: none; }
+
+.amenities li { font-size: 1.1rem; color: #4a4a4a; }
+
+.testimonials { max-width: 800px; margin: 0 auto; text-align: center; }
+
+.testimonials blockquote { margin-bottom: 4rem; }
+
+.testimonials p { font-size: 1.4rem; font-style: italic; font-weight: 300; color: #333333; margin-bottom: 1rem; }
+
+.testimonials cite { font-size: 0.9rem; font-style: normal; text-transform: uppercase; letter-spacing: 0.05em; color: #8a8a8a; }
+
+footer { background: #fff; border-top: 1px solid #f2efeb; text-align: center; padding: 3rem 4rem; }
+
+footer p { font-size: 0.85rem; color: #8a8a8a; }
+
+@media (max-width: 768px) {
+    header, footer, .featured-rooms, .amenities, .testimonials { padding: 4rem 2rem; }
+    
+    header { flex-direction: column; gap: 1.5rem; padding: 1.5rem 2rem; }
+    
+    nav ul { gap: 1.5rem; }
+    
+    .featured-rooms .room { grid-template-columns: 1fr; gap: 2rem; margin-bottom: 4rem; }
+    
+    .featured-rooms .room:nth-child(even) img { order: 0; }
+    
+    .featured-rooms .room img { height: 300px; }
+    
+    .amenities ul { flex-direction: column; gap: 1.5rem; }
+}
