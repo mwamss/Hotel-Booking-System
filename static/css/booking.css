@@ -1,0 +1,64 @@
+.booking-hero {
+    background-image: linear-gradient(90deg, rgba(20, 31, 35, 0.86), rgba(20, 31, 35, 0.32)), url("../images/frames-for-your-heart-FqqiAvJejto-unsplash.jpg");
+    background-position: center 58%;
+}
+
+.booking-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 42px;
+    align-items: start;
+    padding: 80px 6vw;
+}
+
+.booking-aside {
+    display: grid;
+    gap: 18px;
+}
+
+.booking-aside img {
+    width: 100%;
+    height: 100%;
+    min-height: 420px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.booking-note {
+    padding: 28px;
+    background: #203238;
+    color: #ffffff;
+    border-radius: 8px;
+}
+
+.booking-note ul {
+    display: grid;
+    gap: 12px;
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.booking-note li {
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+    .booking-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-aside img {
+        min-height: 320px;
+    }
+}
+
+@media (max-width: 560px) {
+    .booking-layout {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
