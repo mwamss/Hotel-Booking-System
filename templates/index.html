@@ -4,85 +4,179 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GSS Hotel - Home</title>
-    <link rel="stylesheet" href="../static/css/style.css">
-    <style>
-        .hero { background-size: cover; background-position: center; color: white; text-align: center; padding: 140px 20px; }
-        .room-card { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s; }
-        .room-card:hover { transform: scale(1.05); }
-    </style>
+    <link rel="preload" as="image" href="../static/images/home_background.jpeg" fetchpriority="high">
+    <link rel="stylesheet" href="../static/css/base.css">
+    <link rel="stylesheet" href="../static/css/home.css">
 </head>
-<body>
-    <header>
-        <h1>GSS Hotel</h1>
-        <nav>
+<body class="site-page home-page">
+    <header class="site-header">
+        <a class="brand" href="index.html" aria-label="GSS Hotel home">
+            <span class="brand-mark">GSS</span>
+            <span class="brand-copy">Hotel</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary navigation">
             <ul>
                 <li><a href="index.html" class="active">Home</a></li>
                 <li><a href="about.html">About</a></li>
                 <li><a href="booking.html">Booking</a></li>
-                <li><a href="contact.html">Contact</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
-        <!-- Hero Section with Picture -->
-        <section class="hero" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://source.unsplash.com/random/1600x900/?luxury-hotel-lobby');">
-            <h2>Welcome to GSS Hotel</h2>
-            <p>Where luxury meets comfort</p>
-            <a href="booking.html" style="background: #e67e22; color: white; padding: 16px 40px; text-decoration: none; border-radius: 50px; font-size: 1.3em;">Book Now</a>
+        <section class="home-hero">
+            <img src="../static/images/home_background.jpeg" alt="GSS Hotel lounge with warm evening lighting" fetchpriority="high" decoding="async">
+            <div class="home-hero-content">
+                <span class="section-kicker">Welcome to</span>
+                <h1>GSS Hotel</h1>
+                <p>Calm rooms, thoughtful service, and a polished stay from check-in to checkout.</p>
+                <div class="hero-actions">
+                    <a href="booking.html" class="primary-button">Book Your Stay</a>
+                    <a href="about.html" class="secondary-button">Explore Hotel</a>
+                </div>
+            </div>
+            <aside class="hero-panel" aria-label="Hotel highlights">
+                <div>
+                    <strong>24/7</strong>
+                    <span>Guest care</span>
+                </div>
+                <div>
+                    <strong>3</strong>
+                    <span>Room styles</span>
+                </div>
+                <div>
+                    <strong>2026</strong>
+                    <span>Open for bookings</span>
+                </div>
+            </aside>
         </section>
 
-        <!-- Featured Rooms with Pictures -->
-        <section style="padding: 60px 20px; text-align: center; background: #f8f8f8;">
-            <h2>Our Rooms & Suites</h2>
-            <div style="display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; margin-top: 30px;">
+        <section class="booking-strip" aria-label="Quick booking options">
+            <div>
+                <span class="section-kicker">Plan your stay</span>
+                <h2>Reserve the room that fits your trip.</h2>
+            </div>
+            <a href="booking.html" class="dark-button primary-button">Check Availability</a>
+        </section>
 
-                <!-- Room 1 -->
-                <div class="room-card" style="max-width: 340px; background: white;">
-                    <img src="https://source.unsplash.com/random/600x400/?deluxe-hotel-room" alt="Deluxe Room" style="width: 100%; height: 220px; object-fit: cover;">
-                    <div style="padding: 20px;">
+        <section class="intro-section">
+            <div class="intro-copy">
+                <span class="section-kicker">A better hotel rhythm</span>
+                <h2>Everything is arranged for easy arrivals, restful nights, and slow mornings.</h2>
+            </div>
+            <div class="intro-grid">
+                <article>
+                    <span>01</span>
+                    <h3>Quiet rooms</h3>
+                    <p>Soft lighting, generous beds, and spaces prepared for real rest.</p>
+                </article>
+                <article>
+                    <span>02</span>
+                    <h3>Effortless booking</h3>
+                    <p>Choose your dates, room, and guest details in a focused reservation flow.</p>
+                </article>
+                <article>
+                    <span>03</span>
+                    <h3>Warm service</h3>
+                    <p>A helpful team ready for arrivals, dining questions, and local guidance.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="featured-rooms-section">
+            <div class="section-title">
+                <span class="section-kicker">Accommodations</span>
+                <h2>Rooms and suites with room to settle in.</h2>
+            </div>
+            <div class="rooms-grid">
+                <div class="room-card">
+                    <img src="../static/images/optimized/deluxe-room-card.jpg" alt="Deluxe room with warm lighting and a large bed" width="900" height="360" loading="eager" decoding="async">
+                    <div class="room-card-content">
                         <h3>Deluxe Room</h3>
-                        <p>King bed • City view • Free WiFi</p>
-                        <a href="booking.html" style="color: #e67e22; font-weight: bold;">Book Now →</a>
+                        <p>King bed &bull; City view &bull; Free Wi-Fi</p>
+                        <a href="booking.html" class="book-link">Book now</a>
                     </div>
                 </div>
 
-                <!-- Room 2 -->
-                <div class="room-card" style="max-width: 340px; background: white;">
-                    <img src="https://source.unsplash.com/random/600x400/?hotel-suite" alt="Executive Suite" style="width: 100%; height: 220px; object-fit: cover;">
-                    <div style="padding: 20px;">
+                <div class="room-card">
+                    <img src="../static/images/optimized/family-suite-card.jpg" alt="Executive suite with living area and refined finishes" width="900" height="360" loading="eager" decoding="async">
+                    <div class="room-card-content">
                         <h3>Executive Suite</h3>
-                        <p>Living area • Balcony • Premium amenities</p>
-                        <a href="booking.html" style="color: #e67e22; font-weight: bold;">Book Now →</a>
+                        <p>Living area &bull; Balcony &bull; Premium amenities</p>
+                        <a href="booking.html" class="book-link">Book now</a>
                     </div>
                 </div>
 
-                <!-- Room 3 -->
-                <div class="room-card" style="max-width: 340px; background: white;">
-                    <img src="https://source.unsplash.com/random/600x400/?luxury-hotel-room" alt="Presidential Suite" style="width: 100%; height: 220px; object-fit: cover;">
-                    <div style="padding: 20px;">
+                <div class="room-card">
+                    <img src="../static/images/optimized/signature-suite-card.jpg" alt="Presidential suite with a spacious luxury bedroom" width="900" height="360" loading="eager" decoding="async">
+                    <div class="room-card-content">
                         <h3>Presidential Suite</h3>
-                        <p>Private pool • Ocean view • Butler service</p>
-                        <a href="booking.html" style="color: #e67e22; font-weight: bold;">Book Now →</a>
+                        <p>Private pool &bull; Ocean view &bull; Butler service</p>
+                        <a href="booking.html" class="book-link">Book now</a>
                     </div>
                 </div>
-
             </div>
         </section>
 
-        <!-- Gallery Section -->
-        <section style="padding: 60px 20px; text-align: center;">
-            <h2>Hotel Gallery</h2>
-            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                <img src="https://source.unsplash.com/random/400x300/?hotel-pool" alt="Pool" style="width: 300px; border-radius: 12px;">
-                <img src="https://source.unsplash.com/random/400x300/?hotel-restaurant" alt="Restaurant" style="width: 300px; border-radius: 12px;">
-                <img src="https://source.unsplash.com/random/400x300/?hotel-spa" alt="Spa" style="width: 300px; border-radius: 12px;">
+        <section class="amenities-section">
+            <div class="section-title">
+                <span class="section-kicker">Guest comforts</span>
+                <h2>Designed around the details guests notice.</h2>
+            </div>
+            <div class="amenities-grid">
+                <article>
+                    <h3>Breakfast service</h3>
+                    <p>Start the day with a calm meal before meetings, travel, or exploring.</p>
+                </article>
+                <article>
+                    <h3>Pool and lounge</h3>
+                    <p>Relax outside the room with quiet spaces for conversation and downtime.</p>
+                </article>
+                <article>
+                    <h3>Fast Wi-Fi</h3>
+                    <p>Reliable connection for work calls, planning, streaming, and messages.</p>
+                </article>
+                <article>
+                    <h3>Central access</h3>
+                    <p>Stay close to the city while returning to a calm, private base.</p>
+                </article>
             </div>
         </section>
 
-        <footer style="background: #222; color: white; text-align: center; padding: 40px;">
-            <p>&copy; 2026 GSS Hotel. All Rights Reserved.</p>
-        </footer>
+        <section class="gallery-section" aria-label="GSS Hotel gallery">
+            <div class="section-title">
+                <span class="section-kicker">Explore</span>
+                <h2>A closer look at the stay.</h2>
+            </div>
+            <div class="gallery-grid">
+                <img class="gallery-large" src="../static/images/WhatsApp Image 2026-06-19 at 08.55.01.jpeg" alt="Elegant hotel entrance with patterned lighting" loading="eager" decoding="async">
+                <img src="../static/images/WhatsApp Image 2026-06-19 at 08.54.58.jpeg" alt="Hotel courtyard with outdoor seating" loading="eager" decoding="async">
+                <img src="../static/images/WhatsApp Image 2026-06-19 at 08.55.05 (1).jpeg" alt="Guest dining in a bright hotel lounge" loading="eager" decoding="async">
+                <img src="../static/images/WhatsApp Image 2026-06-19 at 08.54.59.jpeg" alt="Poolside lounge area with palm trees" loading="eager" decoding="async">
+            </div>
+        </section>
+
+        <section class="reviews-section">
+            <div class="review-copy">
+                <span class="section-kicker">Guest notes</span>
+                <h2>Stays that feel considered, not complicated.</h2>
+            </div>
+            <div class="reviews-grid">
+                <blockquote>
+                    <p>"The room was quiet, the staff were kind, and everything felt easy."</p>
+                    <cite>Weekend guest</cite>
+                </blockquote>
+                <blockquote>
+                    <p>"A polished hotel for work trips, with enough calm to actually rest."</p>
+                    <cite>Business traveler</cite>
+                </blockquote>
+            </div>
+        </section>
     </main>
+
+    <footer>
+        <p>&copy; 2026 GSS Hotel. All rights reserved.</p>
+    </footer>
 </body>
 </html>
