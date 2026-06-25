@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Stay - GSS Hotel</title>
+    <link rel="preload" as="image" href="/static/images/frames-for-your-heart-FqqiAvJejto-unsplash.jpg" fetchpriority="high">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/booking.css">
+</head>
+<body class="site-page booking-page">
+    <header class="site-header">
+        <a class="brand" href="index.html" aria-label="GSS Hotel home">
+            <span class="brand-mark">GSS</span>
+            <span class="brand-copy">Hotel</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary navigation">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="booking.html" class="active">Booking</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="page-hero booking-hero">
+            <div class="page-hero-content">
+                <span class="section-kicker">Reservations</span>
+                <h1>Book a stay that feels effortless from the first click.</h1>
+                <p>Tell us your dates, room preference, and contact details. Our team will follow up with availability and next steps.</p>
+            </div>
+        </section>
+
+        <section class="booking-layout">
+            <aside class="booking-aside">
+                <img src="/static/images/alev-takil-lw3Lqe2K7xc-unsplash.jpg" alt="Breakfast served in a hotel room" loading="lazy" decoding="async">
+                <div class="booking-note">
+                    <span class="section-kicker">Included comforts</span>
+                    <ul>
+                        <li>Complimentary breakfast</li>
+                        <li>Free high-speed Wi-Fi</li>
+                        <li>Flexible room options</li>
+                        <li>24/7 guest support</li>
+                    </ul>
+                </div>
+            </aside>
+
+            <section class="booking-form modern-form-card">
+                <span class="section-kicker">Reserve your room</span>
+                <h2>Stay details</h2>
+                <p id="booking-message" class="form-message" hidden></p>
+
+                <form id="booking-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="check-in">Check-in Date</label>
+                            <input type="date" id="check-in" name="check-in" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="check-out">Check-out Date</label>
+                            <input type="date" id="check-out" name="check-out" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="room-type">Room Type</label>
+                            <select id="room-type" name="room-type" required>
+                                <option value="deluxe">Deluxe Room</option>
+                                <option value="family">Family Suite</option>
+                                <option value="standard">Standard Room</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="guests">Guests</label>
+                            <input type="number" id="guests" name="guests" min="1" max="10" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required pattern="[\+]?([0-9]{1,3})?[-. ]?([0-9]{1,4})?[-. ]?([0-9]{1,4})?[-. ]?([0-9]{1,9})" title="Please enter a valid phone number.">
+                        </div>
+                    </div>
+                    <button type="submit" class="primary-button form-submit">Book Now</button>
+                </form>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 GSS Hotel. All rights reserved.</p>
+    </footer>
+
+    <script src="/static/js/script.js"></script>
+</body>
+</html>
