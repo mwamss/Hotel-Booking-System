@@ -1,28 +1,25 @@
-<?php
-$pageTitle = 'About GSS Hotel';
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($pageTitle); ?></title>
-    <link rel="preload" as="image" href="<?= asset('images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg'); ?>" fetchpriority="high">
-    <link rel="stylesheet" href="<?= asset('css/style.css'); ?>">
-    <link rel="stylesheet" href="<?= asset('css/about.css'); ?>">
+    <title>About GSS Hotel</title>
+    <link rel="preload" as="image" href="../static/images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg" fetchpriority="high">
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="../static/css/about.css">
 </head>
 <body class="site-page about-page">
     <header class="site-header">
-        <a class="brand" href="<?= url_for(); ?>" aria-label="GSS Hotel home">
+        <a class="brand" href="../index.php" aria-label="GSS Hotel home">
             <span class="brand-mark">GSS</span>
             <span class="brand-copy">Hotel</span>
         </a>
         <nav class="site-nav" aria-label="Primary navigation">
             <ul>
-                <li><a href="<?= url_for(); ?>">Home</a></li>
-                <li><a href="<?= url_for('about'); ?>" class="active">About</a></li>
-                <li><a href="<?= url_for('booking'); ?>">Booking</a></li>
-                <li><a href="<?= url_for('contact'); ?>">Contact Us</a></li>
+                <li><a href="../index.php">Home</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+                <li><a href="../index.php?page=booking">Booking</a></li>
+                <li><a href="../index.php?page=contact">Contact Us</a></li>
             </ul>
         </nav>
     </header>
@@ -43,7 +40,7 @@ $pageTitle = 'About GSS Hotel';
                 <p>We created GSS Hotel for guests who want the convenience of a central stay without losing the warmth, privacy, and ease of a true getaway.</p>
                 <p>Every detail is tuned for comfort: bright lounges, restful rooms, reliable service, and spaces that move naturally from work to relaxation.</p>
             </div>
-            <img src="<?= asset('images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg'); ?>" alt="Elegant hotel lounge with classic details" loading="lazy" decoding="async">
+            <img src="../static/images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg" alt="Elegant hotel lounge with classic details" loading="lazy" decoding="async">
         </section>
 
         <section class="values-section">
@@ -68,7 +65,7 @@ $pageTitle = 'About GSS Hotel';
         </section>
 
         <section class="image-feature-section">
-            <img src="<?= asset('images/frames-for-your-heart-FqqiAvJejto-unsplash.jpg'); ?>" alt="Luxury hotel suite with bright natural light" loading="lazy" decoding="async">
+            <img src="../static/images/frames-for-your-heart-FqqiAvJejto-unsplash.jpg" alt="Luxury hotel suite with bright natural light" loading="lazy" decoding="async">
             <div>
                 <span class="section-kicker">Facilities</span>
                 <h2>Everything expected from a modern stay.</h2>
