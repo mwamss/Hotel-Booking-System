@@ -3,83 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Booking - Home</title>
+    <title>GSS Hotel - Welcome</title>
     <link rel="stylesheet" href="<?= asset('css/style.css'); ?>">
 </head>
 <body>
     <header>
-        <h1>Welcome to GSS Hotel</h1>
+        <h1>GSS Hotel</h1>
         <nav>
             <ul>
                 <li><a href="<?= url_for(); ?>">Home</a></li>
                 <li><a href="<?= url_for('about'); ?>">About</a></li>
                 <li><a href="<?= url_for('booking'); ?>">Booking</a></li>
-                <li><a href="<?= url_for('contact'); ?>">Contact Us</a></li>
-               
+                <li><a href="<?= url_for('contact'); ?>">Contact</a></li>
             </ul>
         </nav>
-        
     </header>
-    
+
     <main>
         <!-- Hero Section -->
-        <section class="hero">
-            <h2>Experience Luxury and Comfort</h2>
-            <p>Your perfect getaway awaits. Book your stay today!</p>
-            <a href="<?= url_for('booking'); ?>" class="cta-button">Book Now</a>
+        <section class="hero" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://source.unsplash.com/random/1600x900/?hotel'); background-size: cover; color: white; text-align: center; padding: 100px 20px;">
+            <h2>Experience Luxury & Comfort</h2>
+            <p>Your perfect stay awaits at GSS Hotel</p>
+            <a href="<?= url_for('booking'); ?>" class="cta-button" style="background: #ff6b00; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-size: 1.2em;">Book Now</a>
         </section>
 
-        <!-- Featured Rooms Section -->
-        <section class="featured-rooms">
-            <h2>Featured Rooms</h2>
-            <div class="room">
-                <img src="<?= asset('images/room1.jpg'); ?>" alt="Deluxe Room">
-                <h3>Deluxe Room</h3>
-                <p>Enjoy a luxurious stay with stunning views and modern amenities.</p>
-                <a href="<?= url_for('booking'); ?>" class="cta-button">Check Availability</a>
-            </div>
-            <div class="room">
-                <img src="<?= asset('images/room2.jpg'); ?>" alt="Family Suite">
-                <h3>Family Suite</h3>
-                <p>Perfect for families, spacious and comfortable with all the essentials.</p>
-                <a href="<?= url_for('booking'); ?>" class="cta-button">Check Availability</a>
-            </div>
-            <div class="room">
-                <img src="<?= asset('images/room3.jpg'); ?>" alt="Standard Room">
-                <h3>Standard Room</h3>
-                <p>A cozy room with everything you need for a pleasant stay.</p>
-                <a href="<?= url_for('booking'); ?>" class="cta-button">Check Availability</a>
+        <!-- Featured Rooms -->
+        <section class="featured-rooms" style="padding: 40px 20px; text-align: center;">
+            <h2>Our Rooms</h2>
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <div class="room" style="max-width: 300px; border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
+                    <img src="https://source.unsplash.com/random/300x200/?hotel-room" alt="Deluxe" style="width:100%;">
+                    <h3>Deluxe Room</h3>
+                    <p>Spacious & elegant with city views</p>
+                    <a href="<?= url_for('booking'); ?>">Book →</a>
+                </div>
+                <!-- Add more rooms if you want -->
             </div>
         </section>
 
-        <!-- Amenities Section -->
-        <section class="amenities">
-            <h2>Amenities</h2>
-            <ul>
-                <li>Free Wi-Fi</li>
-                <li>Swimming Pool</li>
-                <li>24/7 Room Service</li>
-                <li>Fitness Center</li>
-                <li>Complimentary Breakfast</li>
-            </ul>
-        </section>
-
-        <!-- Testimonials Section -->
-        <section class="testimonials">
-            <h2>What Our Guests Say</h2>
-            <blockquote>
-                <p>"The best hotel experience I've ever had! Highly recommend!"</p>
-                <cite>- John Doe</cite>
-            </blockquote>
-            <blockquote>
-                <p>"Amazing service and beautiful rooms. Will definitely come back!"</p>
-                <cite>- Jane Smith</cite>
-            </blockquote>
-        </section>
+        <footer style="text-align: center; padding: 20px; background: #333; color: white;">
+            <p>&copy; 2026 GSS Hotel. All Rights Reserved.</p>
+        </footer>
     </main>
-
-    <footer>
-        <p>&copy; 2026 Hotel Booking. All rights reserved.</p>
-    </footer>
 </body>
 </html>
+
