@@ -34,6 +34,10 @@
     object-fit: cover;
 }
 
+.motion-ready .home-hero > img {
+    animation: home-image-settle 1400ms var(--motion-ease) both;
+}
+
 .home-hero-content {
     width: min(900px, 100%);
     padding: 11vh 6vw 17vh;
@@ -80,6 +84,10 @@
     border: 1px solid rgba(255, 255, 255, 0.24);
     border-radius: 8px;
     backdrop-filter: blur(18px);
+}
+
+.motion-ready .hero-panel {
+    animation: hero-panel-rise 760ms 260ms var(--motion-ease) both;
 }
 
 .hero-panel div {
@@ -239,6 +247,10 @@
     box-shadow: 0 20px 45px rgba(7, 14, 16, 0.24);
 }
 
+.room-card:active {
+    transform: translateY(-1px);
+}
+
 .room-card img {
     display: block;
     width: 100%;
@@ -270,6 +282,28 @@
 
 .book-link:hover {
     color: #203238;
+}
+
+@keyframes home-image-settle {
+    from {
+        transform: scale(1.045);
+        filter: saturate(0.88);
+    }
+    to {
+        transform: scale(1);
+        filter: saturate(1);
+    }
+}
+
+@keyframes hero-panel-rise {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .amenities-section {
