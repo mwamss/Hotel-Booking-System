@@ -5,10 +5,12 @@
 
 .booking-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(280px, 0.85fr) minmax(340px, 1fr);
     gap: 42px;
     align-items: start;
-    padding: 80px 6vw;
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 80px 0 92px;
 }
 
 .booking-aside {
@@ -18,8 +20,7 @@
 
 .booking-aside img {
     width: 100%;
-    height: 100%;
-    min-height: 420px;
+    height: clamp(320px, 42vw, 520px);
     object-fit: cover;
     border-radius: 8px;
 }
@@ -29,6 +30,321 @@
     background: #203238;
     color: #ffffff;
     border-radius: 8px;
+}
+
+.booking-form {
+    align-self: stretch;
+    scroll-margin-top: 120px;
+}
+
+.booking-intro,
+.confirmation-copy {
+    max-width: 58ch;
+    margin: 14px 0 0;
+    color: #5c6a6f;
+    line-height: 1.7;
+}
+
+.booking-progress {
+    counter-reset: booking-step;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 26px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.booking-progress li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 10px;
+    row-gap: 2px;
+    min-height: 64px;
+    padding: 12px;
+    background: #f8f6f1;
+    color: #6a777c;
+    border: 1px solid rgba(32, 50, 56, 0.1);
+    border-radius: 6px;
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.booking-progress span {
+    grid-row: span 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #ffffff;
+    color: #203238;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+.booking-progress strong,
+.booking-progress small {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.booking-progress strong {
+    align-self: end;
+    color: inherit;
+    font-size: 0.92rem;
+    line-height: 1.1;
+}
+
+.booking-progress small {
+    color: inherit;
+    font-size: 0.74rem;
+    font-weight: 700;
+    opacity: 0.78;
+}
+
+.booking-progress li.active {
+    background: #203238;
+    color: #ffffff;
+    border-color: #203238;
+}
+
+.booking-progress li.active span {
+    background: #f2b66d;
+}
+
+.booking-progress li.is-complete {
+    background: #efe3d4;
+    color: #6d4624;
+    border-color: rgba(109, 70, 36, 0.16);
+}
+
+.booking-progress li.is-complete span {
+    background: #ffffff;
+    color: #6d4624;
+}
+
+.booking-form form[hidden],
+.booking-confirmation[hidden] {
+    display: none;
+}
+
+.booking-flow {
+    display: grid;
+    gap: 0;
+}
+
+.booking-step {
+    margin: 26px 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.booking-step[hidden] {
+    display: none;
+}
+
+.booking-step legend {
+    margin: 0;
+    padding: 0;
+    color: #203238;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.55rem, 2.5vw, 2.15rem);
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.step-copy {
+    max-width: 54ch;
+    margin: 10px 0 24px;
+    color: #667277;
+    line-height: 1.65;
+}
+
+.step-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 8px;
+}
+
+.step-actions.single-action {
+    justify-content: flex-end;
+}
+
+.step-actions .primary-button,
+.step-actions .secondary-step-button {
+    min-width: 170px;
+    border: 0;
+    cursor: pointer;
+}
+
+.step-actions .form-submit {
+    width: auto;
+}
+
+.secondary-step-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 22px;
+    background: #f8f6f1;
+    color: #203238;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 800;
+    transition: background 180ms ease, transform 180ms ease, color 180ms ease;
+}
+
+.secondary-step-button:hover {
+    background: #efe3d4;
+    transform: translateY(-1px);
+}
+
+.secondary-step-button:active,
+.step-actions .primary-button:active {
+    transform: translateY(1px);
+}
+
+.booking-review {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 24px;
+}
+
+.booking-review div {
+    min-width: 0;
+    padding: 16px;
+    background: #f8f6f1;
+    border: 1px solid rgba(32, 50, 56, 0.08);
+    border-radius: 6px;
+}
+
+.booking-review dt {
+    margin-bottom: 6px;
+    color: #8b6848;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.booking-review dd {
+    margin: 0;
+    color: #203238;
+    font-weight: 800;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.booking-confirmation {
+    margin-top: 28px;
+    padding: 28px;
+    background: #f8f6f1;
+    border: 1px solid rgba(32, 50, 56, 0.1);
+    border-radius: 8px;
+    scroll-margin-top: 120px;
+}
+
+.confirmation-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.confirmation-mark {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: #203238;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+}
+
+.confirmation-header h3 {
+    margin: 0;
+    color: #203238;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    font-weight: 500;
+    line-height: 1.08;
+}
+
+.confirmation-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 26px 0 0;
+}
+
+.confirmation-summary div {
+    min-width: 0;
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 6px;
+}
+
+.confirmation-summary dt {
+    margin-bottom: 6px;
+    color: #8b6848;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.confirmation-summary dd {
+    margin: 0;
+    color: #203238;
+    font-weight: 800;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.confirmation-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 26px;
+}
+
+.confirmation-actions .primary-button {
+    border: 0;
+    cursor: pointer;
+}
+
+.secondary-text-link {
+    color: #203238;
+    font-weight: 800;
+    text-decoration-color: rgba(32, 50, 56, 0.35);
+    text-underline-offset: 4px;
+}
+
+.secondary-text-link:hover {
+    color: #a66f3f;
+}
+
+.booking-page :is(button, a, input, select):focus-visible {
+    outline: 3px solid rgba(166, 111, 63, 0.36);
+    outline-offset: 3px;
+}
+
+.booking-page :is(input, select, button):disabled {
+    cursor: wait;
+    opacity: 0.74;
 }
 
 .booking-note ul {
@@ -49,16 +365,66 @@
 @media (max-width: 900px) {
     .booking-layout {
         grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .booking-form {
+        order: -1;
     }
 
     .booking-aside img {
-        min-height: 320px;
+        height: min(360px, 64vw);
     }
 }
 
 @media (max-width: 560px) {
     .booking-layout {
-        padding-left: 20px;
-        padding-right: 20px;
+        width: min(100% - 28px, 1180px);
+        padding-top: 42px;
+        padding-bottom: 56px;
+    }
+
+    .booking-progress {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-progress li {
+        min-height: 58px;
+    }
+
+    .step-actions,
+    .step-actions.single-action {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .step-actions .primary-button,
+    .step-actions .secondary-step-button {
+        width: 100%;
+    }
+
+    .booking-review {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-confirmation {
+        padding: 20px;
+    }
+
+    .confirmation-header {
+        align-items: flex-start;
+    }
+
+    .confirmation-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .confirmation-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .confirmation-actions .primary-button {
+        width: 100%;
     }
 }

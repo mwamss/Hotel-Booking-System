@@ -19,16 +19,38 @@ function showMessage(element, text, type) {
     element.classList.add(type);
 }
 
-async function submitForm(form, endpoint, messageElement, successText) {
+function setFormBusy(form, isBusy, label) {
+    const submitButton = form.querySelector("[type='submit']");
+    form.setAttribute("aria-busy", String(isBusy));
+
+    [...form.elements].forEach((element) => {
+        element.disabled = isBusy;
+    });
+
+    if (!submitButton) {
+        return;
+    }
+
+    if (!submitButton.dataset.defaultLabel) {
+        submitButton.dataset.defaultLabel = submitButton.textContent.trim();
+    }
+
+    submitButton.textContent = isBusy ? label : submitButton.dataset.defaultLabel;
+}
+
+async function submitForm(form, endpoint, messageElement, successText, options = {}) {
+    const payload = readForm(form);
+
     showMessage(messageElement, "Sending...", "success");
+    setFormBusy(form, true, options.busyText || "Sending...");
 
     try {
-        const response = await fetch(endpoint, {
+        const response = await fetch(apiEndpoint(endpoint), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(readForm(form)),
+            body: JSON.stringify(payload),
         });
         const data = await response.json();
 
@@ -38,11 +60,292 @@ async function submitForm(form, endpoint, messageElement, successText) {
             return;
         }
 
+        if (typeof options.onSuccess === "function") {
+            options.onSuccess({ data, form, messageElement, payload, successText });
+        } else {
+            form.reset();
+            showMessage(messageElement, successText, "success");
+        }
+    } catch (error) {
+        showMessage(messageElement, networkErrorMessage(), "error");
+    } finally {
+        setFormBusy(form, false);
+    }
+}
+
+function apiEndpoint(endpoint) {
+    if (/^https?:\/\//i.test(endpoint)) {
+        return endpoint;
+    }
+
+    const currentHost = window.location.hostname;
+    const currentPort = window.location.port;
+    const isLocalHttpPreview = ["localhost", "127.0.0.1", "::1"].includes(currentHost) && currentPort !== "5000";
+
+    if (window.location.protocol === "file:" || isLocalHttpPreview) {
+        return `http://127.0.0.1:5000${endpoint}`;
+    }
+
+    return endpoint;
+}
+
+function networkErrorMessage() {
+    const currentHost = window.location.hostname;
+    const currentPort = window.location.port;
+    const isLocalHttpPreview = ["localhost", "127.0.0.1", "::1"].includes(currentHost) && currentPort !== "5000";
+
+    if (window.location.protocol === "file:" || isLocalHttpPreview) {
+        return "Start the Flask backend, then submit again or open http://127.0.0.1:5000/booking.html.";
+    }
+
+    return "Unable to send right now. Make sure the Flask backend is running, then try again.";
+}
+
+function formatDisplayDate(value) {
+    const date = new Date(`${value}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("en", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(date);
+}
+
+function formatRoomType(value) {
+    const roomLabels = {
+        deluxe: "Deluxe Room",
+        executive: "Executive Suite",
+        presidential: "Presidential Suite",
+        suite: "Suite",
+    };
+
+    return roomLabels[value] || value;
+}
+
+function setupBookingDates(form) {
+    const checkIn = form.querySelector("#check-in");
+    const checkOut = form.querySelector("#check-out");
+
+    if (!checkIn || !checkOut) {
+        return;
+    }
+
+    const today = new Date();
+    const todayIso = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0"),
+    ].join("-");
+    checkIn.min = todayIso;
+    checkOut.min = todayIso;
+
+    const syncDateValidity = () => {
+        checkOut.min = checkIn.value || todayIso;
+        checkOut.setCustomValidity("");
+
+        if (checkOut.value && checkIn.value && checkOut.value <= checkIn.value) {
+            checkOut.setCustomValidity("Check-out must be after check-in.");
+        }
+    };
+
+    checkIn.addEventListener("change", () => {
+        syncDateValidity();
+
+        if (checkOut.value && checkIn.value && checkOut.value <= checkIn.value) {
+            checkOut.value = "";
+        }
+    });
+
+    checkOut.addEventListener("change", syncDateValidity);
+    syncDateValidity();
+}
+
+function showBookingConfirmation({ data, form, messageElement, payload, successText }) {
+    const confirmation = document.querySelector("#booking-confirmation");
+
+    if (!confirmation) {
         form.reset();
         showMessage(messageElement, successText, "success");
-    } catch (error) {
-        showMessage(messageElement, "Unable to send right now. Please try again.", "error");
+        return;
     }
+
+    const reference = data.id ? `GSS-${String(data.id).padStart(4, "0")}` : "Pending";
+    const dates = `${formatDisplayDate(payload.check_in)} to ${formatDisplayDate(payload.check_out)}`;
+    const room = `${formatRoomType(payload.room_type)} for ${payload.guests} guest${payload.guests === "1" ? "" : "s"}`;
+    const contact = `${payload.name} - ${payload.email}`;
+
+    document.querySelector("#confirmation-reference").textContent = reference;
+    document.querySelector("#confirmation-dates").textContent = dates;
+    document.querySelector("#confirmation-room").textContent = room;
+    document.querySelector("#confirmation-contact").textContent = contact;
+
+    form.reset();
+    form.hidden = true;
+    messageElement.hidden = true;
+    confirmation.hidden = false;
+    confirmation.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setupBookingConfirmationReset(form) {
+    const confirmation = document.querySelector("#booking-confirmation");
+    const button = document.querySelector("#new-booking-button");
+    const message = document.querySelector("#booking-message");
+
+    if (!confirmation || !button) {
+        return;
+    }
+
+    button.addEventListener("click", () => {
+        confirmation.hidden = true;
+        form.hidden = false;
+
+        if (message) {
+            message.hidden = true;
+        }
+
+        form.querySelector("input, select, textarea")?.focus();
+    });
+}
+
+function bookingStepPanels(form) {
+    return [...form.querySelectorAll("[data-step-panel]")];
+}
+
+function bookingStepIndicators() {
+    return [...document.querySelectorAll("[data-step-indicator]")];
+}
+
+function activeBookingStepIndex(form) {
+    return Number(form.dataset.activeStep || "0");
+}
+
+function validateBookingStep(panel) {
+    const fields = [...panel.querySelectorAll("input, select, textarea")];
+
+    for (const field of fields) {
+        if (!field.checkValidity()) {
+            field.reportValidity();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function setBookingStep(form, nextIndex) {
+    const panels = bookingStepPanels(form);
+    const indicators = bookingStepIndicators();
+    const boundedIndex = Math.max(0, Math.min(nextIndex, panels.length - 1));
+
+    panels.forEach((panel, index) => {
+        panel.hidden = index !== boundedIndex;
+        panel.classList.toggle("is-active", index === boundedIndex);
+    });
+
+    indicators.forEach((indicator, index) => {
+        indicator.classList.toggle("active", index === boundedIndex);
+        indicator.classList.toggle("is-complete", index < boundedIndex);
+        indicator.setAttribute("aria-current", index === boundedIndex ? "step" : "false");
+    });
+
+    form.dataset.activeStep = String(boundedIndex);
+
+    if (boundedIndex === panels.length - 1) {
+        updateBookingReview(form);
+    }
+}
+
+function updateBookingReview(form) {
+    const payload = readForm(form);
+    const dates = payload.check_in && payload.check_out
+        ? `${formatDisplayDate(payload.check_in)} to ${formatDisplayDate(payload.check_out)}`
+        : "Select dates";
+    const room = payload.room_type && payload.guests
+        ? `${formatRoomType(payload.room_type)} for ${payload.guests} guest${payload.guests === "1" ? "" : "s"}`
+        : "Choose a room";
+    const guest = payload.name ? payload.name : "Add guest name";
+    const contact = payload.email && payload.phone
+        ? `${payload.email} - ${payload.phone}`
+        : "Add contact details";
+
+    const reviewValues = {
+        dates,
+        room,
+        guest,
+        contact,
+    };
+
+    Object.entries(reviewValues).forEach(([key, value]) => {
+        const target = document.querySelector(`[data-review="${key}"]`);
+
+        if (target) {
+            target.textContent = value;
+        }
+    });
+}
+
+function setupBookingFlow(form) {
+    const panels = bookingStepPanels(form);
+
+    if (panels.length === 0) {
+        return;
+    }
+
+    setBookingStep(form, 0);
+
+    form.addEventListener("click", (event) => {
+        const nextButton = event.target.closest("[data-next-step]");
+        const prevButton = event.target.closest("[data-prev-step]");
+
+        if (nextButton) {
+            const activeIndex = activeBookingStepIndex(form);
+
+            if (validateBookingStep(panels[activeIndex])) {
+                setBookingStep(form, activeIndex + 1);
+            }
+        }
+
+        if (prevButton) {
+            setBookingStep(form, activeBookingStepIndex(form) - 1);
+        }
+    });
+
+    form.addEventListener("input", () => {
+        if (activeBookingStepIndex(form) === panels.length - 1) {
+            updateBookingReview(form);
+        }
+    });
+}
+
+function shouldSubmitBookingForm(form) {
+    const panels = bookingStepPanels(form);
+    const activeIndex = activeBookingStepIndex(form);
+
+    if (activeIndex < panels.length - 1) {
+        if (validateBookingStep(panels[activeIndex])) {
+            setBookingStep(form, activeIndex + 1);
+        }
+
+        return false;
+    }
+
+    for (const panel of panels) {
+        const invalidField = [...panel.querySelectorAll("input, select, textarea")]
+            .find((field) => !field.checkValidity());
+
+        if (invalidField) {
+            setBookingStep(form, Number(panel.dataset.stepPanel || "0"));
+            window.requestAnimationFrame(() => invalidField.reportValidity());
+            return false;
+        }
+    }
+
+    updateBookingReview(form);
+    return true;
 }
 
 function setupPageMotion() {
@@ -114,9 +417,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const bookingMessage = document.querySelector("#booking-message");
 
     if (bookingForm) {
+        setupBookingDates(bookingForm);
+        setupBookingFlow(bookingForm);
+        setupBookingConfirmationReset(bookingForm);
+
         bookingForm.addEventListener("submit", (event) => {
             event.preventDefault();
-            submitForm(bookingForm, "/api/bookings", bookingMessage, "Booking request received. We will follow up soon.");
+
+            if (!shouldSubmitBookingForm(bookingForm)) {
+                return;
+            }
+
+            submitForm(bookingForm, "/api/bookings", bookingMessage, "Booking request received. We will follow up soon.", {
+                busyText: "Sending request...",
+                onSuccess: showBookingConfirmation,
+            });
         });
     }
 

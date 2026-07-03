@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Your Stay - GSS Hotel</title>
+    <link rel="icon" href="data:,">
     <link rel="preload" as="image" href="../static/images/frames-for-your-heart-FqqiAvJejto-unsplash.jpg" fetchpriority="high">
     <link rel="stylesheet" href="../static/css/base.css">
     <link rel="stylesheet" href="../static/css/booking.css">
@@ -49,50 +50,144 @@
 
             <section class="booking-form modern-form-card">
                 <span class="section-kicker">Reserve your room</span>
-                <h2>Stay details</h2>
-                <p id="booking-message" class="form-message" hidden></p>
+                <h2>Plan your stay</h2>
+                <p class="booking-intro">Move through dates, contact details, and a final review before sending your request.</p>
+                <p id="booking-message" class="form-message" role="status" aria-live="polite" hidden></p>
 
-                <form id="booking-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="check-in">Check-in Date</label>
-                            <input type="date" id="check-in" name="check-in" required>
+                <ol class="booking-progress" aria-label="Booking progress">
+                    <li class="active" data-step-indicator="0">
+                        <span>1</span>
+                        <strong>Stay</strong>
+                        <small>Dates and room</small>
+                    </li>
+                    <li data-step-indicator="1">
+                        <span>2</span>
+                        <strong>Contact</strong>
+                        <small>Guest details</small>
+                    </li>
+                    <li data-step-indicator="2">
+                        <span>3</span>
+                        <strong>Review</strong>
+                        <small>Confirm request</small>
+                    </li>
+                </ol>
+
+                <form id="booking-form" class="booking-flow" novalidate>
+                    <fieldset class="booking-step is-active" data-step-panel="0">
+                        <legend>Choose your stay</legend>
+                        <p class="step-copy">Start with the room and dates. You can review everything before sending.</p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="check-in">Check-in date</label>
+                                <input type="date" id="check-in" name="check-in" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="check-out">Check-out date</label>
+                                <input type="date" id="check-out" name="check-out" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="check-out">Check-out Date</label>
-                            <input type="date" id="check-out" name="check-out" required>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="room-type">Room type</label>
+                                <select id="room-type" name="room-type" required>
+                                    <option value="deluxe">Deluxe Room</option>
+                                    <option value="executive">Executive Suite</option>
+                                    <option value="presidential">Presidential Suite</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="guests">Guests</label>
+                                <input type="number" id="guests" name="guests" min="1" max="10" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="room-type">Room Type</label>
-                            <select id="room-type" name="room-type" required>
-                                <option value="deluxe">Deluxe Room</option>
-                                <option value="family">Family Suite</option>
-                                <option value="standard">Standard Room</option>
-                            </select>
+                        <div class="step-actions single-action">
+                            <button type="button" class="primary-button" data-next-step>Continue</button>
                         </div>
+                    </fieldset>
+
+                    <fieldset class="booking-step" data-step-panel="1" hidden>
+                        <legend>Guest contact</legend>
+                        <p class="step-copy">Use details our reservations team can reach quickly.</p>
                         <div class="form-group">
-                            <label for="guests">Guests</label>
-                            <input type="number" id="guests" name="guests" min="1" max="10" required>
+                            <label for="name">Full name</label>
+                            <input type="text" id="name" name="name" autocomplete="name" required>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" required>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" autocomplete="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone number</label>
+                                <input type="tel" id="phone" name="phone" autocomplete="tel" inputmode="tel" required pattern="\+?[0-9][0-9 .\-]{6,19}" title="Please enter a valid phone number.">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" name="phone" required pattern="[\+]?([0-9]{1,3})?[-. ]?([0-9]{1,4})?[-. ]?([0-9]{1,4})?[-. ]?([0-9]{1,9})" title="Please enter a valid phone number.">
+                        <div class="step-actions">
+                            <button type="button" class="secondary-step-button" data-prev-step>Back</button>
+                            <button type="button" class="primary-button" data-next-step>Review request</button>
                         </div>
-                    </div>
-                    <button type="submit" class="primary-button form-submit">Book Now</button>
+                    </fieldset>
+
+                    <fieldset class="booking-step" data-step-panel="2" hidden>
+                        <legend>Review and send</legend>
+                        <p class="step-copy">Check the details below. Your room is not charged until our team confirms availability.</p>
+                        <dl class="booking-review" id="booking-review" aria-live="polite">
+                            <div>
+                                <dt>Stay</dt>
+                                <dd data-review="dates">Select dates</dd>
+                            </div>
+                            <div>
+                                <dt>Room</dt>
+                                <dd data-review="room">Choose a room</dd>
+                            </div>
+                            <div>
+                                <dt>Guest</dt>
+                                <dd data-review="guest">Add guest details</dd>
+                            </div>
+                            <div>
+                                <dt>Contact</dt>
+                                <dd data-review="contact">Add contact details</dd>
+                            </div>
+                        </dl>
+                        <div class="step-actions">
+                            <button type="button" class="secondary-step-button" data-prev-step>Back</button>
+                            <button type="submit" class="primary-button form-submit">Send booking request</button>
+                        </div>
+                    </fieldset>
                 </form>
+
+                <article id="booking-confirmation" class="booking-confirmation" aria-live="polite" hidden>
+                    <div class="confirmation-header">
+                        <span class="confirmation-mark" aria-hidden="true">OK</span>
+                        <div>
+                            <span class="section-kicker">Request sent</span>
+                            <h3>Your booking request is in review</h3>
+                        </div>
+                    </div>
+                    <p class="confirmation-copy">We will contact you with room availability, payment guidance, and arrival details.</p>
+                    <dl class="confirmation-summary">
+                        <div>
+                            <dt>Reference</dt>
+                            <dd id="confirmation-reference">Pending</dd>
+                        </div>
+                        <div>
+                            <dt>Stay</dt>
+                            <dd id="confirmation-dates">Dates pending</dd>
+                        </div>
+                        <div>
+                            <dt>Room</dt>
+                            <dd id="confirmation-room">Room pending</dd>
+                        </div>
+                        <div>
+                            <dt>Guest contact</dt>
+                            <dd id="confirmation-contact">Contact pending</dd>
+                        </div>
+                    </dl>
+                    <div class="confirmation-actions">
+                        <a class="secondary-text-link" href="contact.html">Contact the hotel</a>
+                        <button type="button" class="primary-button" id="new-booking-button">Make another booking</button>
+                    </div>
+                </article>
             </section>
         </section>
     </main>

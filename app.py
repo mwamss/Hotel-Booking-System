@@ -5,6 +5,7 @@ from datetime import date
 from email.utils import parseaddr
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from flask import Flask, jsonify, render_template, request
 
@@ -20,6 +21,18 @@ def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.logger.setLevel(logging.INFO)
     database = Database(BASE_DIR)
+
+    @app.after_request
+    def add_local_cors_headers(response):
+        origin = request.headers.get("Origin", "")
+
+        if request.path.startswith("/api/") and _is_local_browser_origin(origin):
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            response.headers["Vary"] = "Origin"
+
+        return response
 
     @app.get("/")
     @app.get("/index.html")
@@ -109,6 +122,18 @@ def _clean_log_value(value: Any) -> str:
     return " ".join(str(value).strip().split())
 
 
+def _is_local_browser_origin(origin: str) -> bool:
+    if origin == "null":
+        return True
+
+    parsed = urlparse(origin)
+    return parsed.scheme in {"http", "https"} and parsed.hostname in {
+        "localhost",
+        "127.0.0.1",
+        "::1",
+    }
+
+
 def _validate_booking(payload: dict[str, Any]) -> dict[str, str]:
     errors: dict[str, str] = {}
     required_fields = ("check_in", "check_out", "room_type", "guests", "name", "email", "phone")
@@ -144,7 +169,7 @@ def _validate_booking(payload: dict[str, Any]) -> dict[str, str]:
     if len(str(payload["phone"]).strip()) < 7:
         errors["phone"] = "Use a valid phone number."
 
-    allowed_rooms = {"deluxe", "family", "standard", "suite"}
+    allowed_rooms = {"deluxe", "executive", "presidential"}
     if str(payload["room_type"]).strip().lower() not in allowed_rooms:
         errors["room_type"] = "Choose a valid room type."
 
