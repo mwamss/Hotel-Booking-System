@@ -4,3 +4,7 @@
 *.log
 Thumbs.db
 output/
+instance/
+.venv/
+__pycache__/
+*.pyc
