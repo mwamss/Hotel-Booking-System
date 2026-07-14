@@ -101,6 +101,12 @@ function networkErrorMessage() {
     return "Unable to send right now. Make sure the Flask backend is running, then try again.";
 }
 
+const roomRates = {
+    deluxe: 14500,
+    executive: 21500,
+    presidential: 38500,
+};
+
 function formatDisplayDate(value) {
     const date = new Date(`${value}T00:00:00`);
 
@@ -124,6 +130,65 @@ function formatRoomType(value) {
     };
 
     return roomLabels[value] || value;
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat("en-KE", {
+        style: "currency",
+        currency: "KES",
+        maximumFractionDigits: 0,
+    }).format(value);
+}
+
+function calculateNights(checkInValue, checkOutValue) {
+    const checkIn = new Date(`${checkInValue}T00:00:00`);
+    const checkOut = new Date(`${checkOutValue}T00:00:00`);
+
+    if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime()) || checkOut <= checkIn) {
+        return 0;
+    }
+
+    return Math.round((checkOut - checkIn) / 86400000);
+}
+
+function selectedRoomInput(form) {
+    return form.querySelector("[name='room-type']:checked") || form.querySelector("[name='room-type']");
+}
+
+function selectedRoomRate(form, roomType) {
+    const selectedRoom = selectedRoomInput(form);
+    const explicitRate = Number(selectedRoom?.dataset.roomRate || 0);
+
+    return explicitRate || roomRates[roomType] || 0;
+}
+
+function updateStaySummary(form) {
+    const payload = readForm(form);
+    const nights = calculateNights(payload.check_in, payload.check_out);
+    const roomType = payload.room_type || selectedRoomInput(form)?.value || "deluxe";
+    const rate = selectedRoomRate(form, roomType);
+    const guests = Number(payload.guests || 0);
+    const estimate = nights && rate ? formatCurrency(nights * rate) : "Complete dates";
+    const nightLabel = nights ? `${nights} night${nights === 1 ? "" : "s"}` : "Select dates";
+    const dateLabel = payload.check_in && payload.check_out && nights
+        ? `${formatDisplayDate(payload.check_in)} to ${formatDisplayDate(payload.check_out)}`
+        : "Select check-in and check-out";
+    const guestLabel = guests
+        ? `${guests} guest${guests === 1 ? "" : "s"}`
+        : "Add guests";
+    const summaryValues = {
+        dates: dateLabel,
+        nights: nightLabel,
+        room: formatRoomType(roomType),
+        guests: guestLabel,
+        estimate,
+    };
+
+    Object.entries(summaryValues).forEach(([key, value]) => {
+        document.querySelectorAll(`[data-summary="${key}"]`).forEach((target) => {
+            target.textContent = value;
+        });
+    });
 }
 
 function setupBookingDates(form) {
@@ -150,6 +215,8 @@ function setupBookingDates(form) {
         if (checkOut.value && checkIn.value && checkOut.value <= checkIn.value) {
             checkOut.setCustomValidity("Check-out must be after check-in.");
         }
+
+        updateStaySummary(form);
     };
 
     checkIn.addEventListener("change", () => {
@@ -202,6 +269,9 @@ function setupBookingConfirmationReset(form) {
     button.addEventListener("click", () => {
         confirmation.hidden = true;
         form.hidden = false;
+        form.reset();
+        setBookingStep(form, 0);
+        updateStaySummary(form);
 
         if (message) {
             message.hidden = true;
@@ -261,6 +331,8 @@ function setBookingStep(form, nextIndex) {
 
 function updateBookingReview(form) {
     const payload = readForm(form);
+    const nights = calculateNights(payload.check_in, payload.check_out);
+    const rate = selectedRoomRate(form, payload.room_type);
     const dates = payload.check_in && payload.check_out
         ? `${formatDisplayDate(payload.check_in)} to ${formatDisplayDate(payload.check_out)}`
         : "Select dates";
@@ -271,12 +343,14 @@ function updateBookingReview(form) {
     const contact = payload.email && payload.phone
         ? `${payload.email} - ${payload.phone}`
         : "Add contact details";
+    const estimate = nights && rate ? formatCurrency(nights * rate) : "Complete dates";
 
     const reviewValues = {
         dates,
         room,
         guest,
         contact,
+        estimate,
     };
 
     Object.entries(reviewValues).forEach(([key, value]) => {
@@ -315,6 +389,16 @@ function setupBookingFlow(form) {
     });
 
     form.addEventListener("input", () => {
+        updateStaySummary(form);
+
+        if (activeBookingStepIndex(form) === panels.length - 1) {
+            updateBookingReview(form);
+        }
+    });
+
+    form.addEventListener("change", () => {
+        updateStaySummary(form);
+
         if (activeBookingStepIndex(form) === panels.length - 1) {
             updateBookingReview(form);
         }
@@ -371,6 +455,16 @@ function setupPageMotion() {
         ".booking-form",
         ".contact-form",
         ".contact-card > *",
+        ".editorial-intro > *",
+        ".arrival-card",
+        ".signature-suite-section > *",
+        ".seasonal-section .section-title",
+        ".seasonal-card",
+        ".dining-section > *",
+        ".wellness-panel",
+        ".recognition-section > *",
+        ".neighbourhood-section > *",
+        ".newsletter-section > *",
     ];
 
     const revealElements = [...document.querySelectorAll(revealSelectors.join(","))]
@@ -410,8 +504,58 @@ function setupPageMotion() {
     revealElements.forEach((element) => observer.observe(element));
 }
 
+function setupHomeMicroInteractions() {
+    const header = document.querySelector(".home-header");
+    const heroImage = document.querySelector("[data-hero-image]");
+    const interactiveCards = [...document.querySelectorAll("[data-micro-card]")];
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let ticking = false;
+
+    const updateScrollState = () => {
+        ticking = false;
+
+        if (header) {
+            header.classList.toggle("is-compact", window.scrollY > 24);
+        }
+
+        if (heroImage && !prefersReducedMotion) {
+            const offset = Math.min(window.scrollY / 18, 18);
+            heroImage.style.setProperty("--hero-shift-y", `${offset}px`);
+        }
+    };
+
+    const requestScrollUpdate = () => {
+        if (ticking) {
+            return;
+        }
+
+        ticking = true;
+        window.requestAnimationFrame(updateScrollState);
+    };
+
+    updateScrollState();
+    window.addEventListener("scroll", requestScrollUpdate, { passive: true });
+
+    interactiveCards.forEach((card) => {
+        card.addEventListener("pointermove", (event) => {
+            const rect = card.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * 100;
+            const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+            card.style.setProperty("--mx", `${x}%`);
+            card.style.setProperty("--my", `${y}%`);
+        });
+
+        card.addEventListener("pointerleave", () => {
+            card.style.removeProperty("--mx");
+            card.style.removeProperty("--my");
+        });
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     setupPageMotion();
+    setupHomeMicroInteractions();
 
     const bookingForm = document.querySelector("#booking-form");
     const bookingMessage = document.querySelector("#booking-message");
@@ -420,6 +564,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setupBookingDates(bookingForm);
         setupBookingFlow(bookingForm);
         setupBookingConfirmationReset(bookingForm);
+        updateStaySummary(bookingForm);
 
         bookingForm.addEventListener("submit", (event) => {
             event.preventDefault();

@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn about GSS Hotel's quiet luxury, warm service, guest spaces, and practical comforts for refined city stays.">
     <title>About GSS Hotel</title>
     <link rel="preload" as="image" href="../static/images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg" fetchpriority="high">
     <link rel="stylesheet" href="../static/css/base.css">
     <link rel="stylesheet" href="../static/css/about.css">
 </head>
 <body class="site-page about-page">
-    <header class="site-header">
+    <header class="site-header home-header">
         <a class="brand" href="index.html" aria-label="GSS Hotel home">
             <span class="brand-mark">GSS</span>
             <span class="brand-copy">Hotel</span>
@@ -22,6 +23,7 @@
                 <li><a href="contact.html">Contact Us</a></li>
             </ul>
         </nav>
+        <a class="header-book-link" href="booking.html">Book</a>
     </header>
 
     <main>
@@ -30,17 +32,21 @@
                 <span class="section-kicker">About GSS Hotel</span>
                 <h1>Hospitality shaped by quiet luxury and thoughtful service.</h1>
                 <p>Since 2020, GSS Hotel has focused on stays that feel refined, calm, and easy from arrival to checkout.</p>
+                <div class="hero-actions">
+                    <a href="booking.html" class="primary-button">Book your stay</a>
+                    <a href="#story" class="secondary-button">Our story</a>
+                </div>
             </div>
         </section>
 
-        <section class="split-section">
+        <section class="split-section" id="story">
             <div class="split-copy">
                 <span class="section-kicker">Our story</span>
                 <h2>A city hotel with a resort state of mind.</h2>
                 <p>We created GSS Hotel for guests who want the convenience of a central stay without losing the warmth, privacy, and ease of a true getaway.</p>
                 <p>Every detail is tuned for comfort: bright lounges, restful rooms, reliable service, and spaces that move naturally from work to relaxation.</p>
             </div>
-            <img src="../static/images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg" alt="Elegant hotel lounge with classic details" loading="lazy" decoding="async">
+            <img src="../static/images/jennifer-latuperisa-andresen-Cj7a21nHLyo-unsplash.jpg" alt="Elegant hotel lounge with classic details" loading="lazy" decoding="async" data-micro-card>
         </section>
 
         <section class="values-section">
@@ -49,15 +55,15 @@
                 <h2>What guests should feel every time they stay.</h2>
             </div>
             <div class="value-grid">
-                <article>
+                <article data-micro-card>
                     <h3>Warm hospitality</h3>
                     <p>Friendly, attentive service that makes every guest feel expected and cared for.</p>
                 </article>
-                <article>
+                <article data-micro-card>
                     <h3>Quiet excellence</h3>
                     <p>Clean spaces, polished details, and reliable support without unnecessary fuss.</p>
                 </article>
-                <article>
+                <article data-micro-card>
                     <h3>Local connection</h3>
                     <p>Easy access to the city, with calm hotel spaces to return to at the end of the day.</p>
                 </article>
@@ -65,7 +71,7 @@
         </section>
 
         <section class="image-feature-section">
-            <img src="../static/images/frames-for-your-heart-FqqiAvJejto-unsplash.jpg" alt="Luxury hotel suite with bright natural light" loading="lazy" decoding="async">
+            <img src="../static/images/frames-for-your-heart-FqqiAvJejto-unsplash.jpg" alt="Luxury hotel suite with bright natural light" loading="lazy" decoding="async" data-micro-card>
             <div>
                 <span class="section-kicker">Facilities</span>
                 <h2>Everything expected from a modern stay.</h2>
@@ -79,7 +85,16 @@
         </section>
     </main>
 
-    <footer>
+    <footer class="home-footer">
+        <div>
+            <strong>GSS Hotel</strong>
+            <span>Refined rooms, warm service, and practical city stays.</span>
+        </div>
+        <nav aria-label="Footer navigation">
+            <a href="booking.html">Booking</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+        </nav>
         <p>&copy; 2026 GSS Hotel. All rights reserved.</p>
     </footer>
 

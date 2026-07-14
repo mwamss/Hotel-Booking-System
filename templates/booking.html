@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../static/css/booking.css">
 </head>
 <body class="site-page booking-page">
-    <header class="site-header">
+    <header class="site-header home-header">
         <a class="brand" href="index.html" aria-label="GSS Hotel home">
             <span class="brand-mark">GSS</span>
             <span class="brand-copy">Hotel</span>
@@ -23,36 +23,43 @@
                 <li><a href="contact.html">Contact Us</a></li>
             </ul>
         </nav>
+        <a class="header-book-link" href="#booking-flow">Book</a>
     </header>
 
     <main>
         <section class="page-hero booking-hero">
             <div class="page-hero-content">
                 <span class="section-kicker">Reservations</span>
-                <h1>Book a stay that feels effortless from the first click.</h1>
-                <p>Tell us your dates, room preference, and contact details. Our team will follow up with availability and next steps.</p>
+                <h1>Reserve your room without the back-and-forth.</h1>
+                <p>Choose dates, compare rooms, review the request, and send it to the reservations desk in one guided flow.</p>
+                <div class="hero-actions">
+                    <a class="primary-button" href="#booking-flow">Start booking</a>
+                    <a class="secondary-button" href="contact.html">Ask a question</a>
+                </div>
             </div>
         </section>
 
-        <section class="booking-layout">
-            <aside class="booking-aside">
-                <img src="../static/images/alev-takil-lw3Lqe2K7xc-unsplash.jpg" alt="Breakfast served in a hotel room" loading="lazy" decoding="async">
-                <div class="booking-note">
-                    <span class="section-kicker">Included comforts</span>
-                    <ul>
-                        <li>Complimentary breakfast</li>
-                        <li>Free high-speed Wi-Fi</li>
-                        <li>Flexible room options</li>
-                        <li>24/7 guest support</li>
-                    </ul>
-                </div>
-            </aside>
-
+        <section class="booking-layout" id="booking-flow">
             <section class="booking-form modern-form-card">
                 <span class="section-kicker">Reserve your room</span>
                 <h2>Plan your stay</h2>
-                <p class="booking-intro">Move through dates, contact details, and a final review before sending your request.</p>
+                <p class="booking-intro">The form keeps a live summary beside you, so you can see the stay length, room choice, and estimated room total before submitting.</p>
                 <p id="booking-message" class="form-message" role="status" aria-live="polite" hidden></p>
+
+                <div class="booking-assurance" aria-label="Booking support">
+                    <div>
+                        <strong>Same-day reply</strong>
+                        <span>Availability confirmed by the reservations team.</span>
+                    </div>
+                    <div>
+                        <strong>No online charge</strong>
+                        <span>Payment is arranged after the room is confirmed.</span>
+                    </div>
+                    <div>
+                        <strong>Easy changes</strong>
+                        <span>Adjust dates or guest count before confirmation.</span>
+                    </div>
+                </div>
 
                 <ol class="booking-progress" aria-label="Booking progress">
                     <li class="active" data-step-indicator="0">
@@ -86,18 +93,61 @@
                                 <input type="date" id="check-out" name="check-out" required>
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="room-type">Room type</label>
-                                <select id="room-type" name="room-type" required>
-                                    <option value="deluxe">Deluxe Room</option>
-                                    <option value="executive">Executive Suite</option>
-                                    <option value="presidential">Presidential Suite</option>
-                                </select>
+                        <div class="room-choice-section">
+                            <p class="field-label" id="room-choice-label">Room type</p>
+                            <div class="room-choice-grid" role="radiogroup" aria-labelledby="room-choice-label">
+                                <label class="room-choice">
+                                    <input type="radio" name="room-type" value="deluxe" data-room-rate="14500" required checked>
+                                    <span class="room-choice-body">
+                                        <span class="room-choice-top">
+                                            <strong>Deluxe Room</strong>
+                                            <span>KSh 14,500/night</span>
+                                        </span>
+                                        <span class="room-choice-copy">A calm room for short stays, solo work trips, or weekend visits.</span>
+                                        <span class="room-choice-tags">
+                                            <span>Up to 2 guests</span>
+                                            <span>Queen bed</span>
+                                        </span>
+                                    </span>
+                                </label>
+                                <label class="room-choice">
+                                    <input type="radio" name="room-type" value="executive" data-room-rate="21500" required>
+                                    <span class="room-choice-body">
+                                        <span class="room-choice-top">
+                                            <strong>Executive Suite</strong>
+                                            <span>KSh 21,500/night</span>
+                                        </span>
+                                        <span class="room-choice-copy">More lounge space for longer stays, business travel, or couples.</span>
+                                        <span class="room-choice-tags">
+                                            <span>Up to 4 guests</span>
+                                            <span>Living area</span>
+                                        </span>
+                                    </span>
+                                </label>
+                                <label class="room-choice">
+                                    <input type="radio" name="room-type" value="presidential" data-room-rate="38500" required>
+                                    <span class="room-choice-body">
+                                        <span class="room-choice-top">
+                                            <strong>Presidential Suite</strong>
+                                            <span>KSh 38,500/night</span>
+                                        </span>
+                                        <span class="room-choice-copy">A private suite for premium stays, family hosting, and special visits.</span>
+                                        <span class="room-choice-tags">
+                                            <span>Up to 6 guests</span>
+                                            <span>Premium view</span>
+                                        </span>
+                                    </span>
+                                </label>
                             </div>
+                        </div>
+                        <div class="form-row compact-row">
                             <div class="form-group">
                                 <label for="guests">Guests</label>
-                                <input type="number" id="guests" name="guests" min="1" max="10" required>
+                                <input type="number" id="guests" name="guests" min="1" max="10" value="2" required>
+                            </div>
+                            <div class="stay-length-card" aria-live="polite">
+                                <span>Stay length</span>
+                                <strong data-summary="nights">Select dates</strong>
                             </div>
                         </div>
                         <div class="step-actions single-action">
@@ -148,7 +198,12 @@
                                 <dt>Contact</dt>
                                 <dd data-review="contact">Add contact details</dd>
                             </div>
+                            <div>
+                                <dt>Estimated room total</dt>
+                                <dd data-review="estimate">Complete dates</dd>
+                            </div>
                         </dl>
+                        <p class="booking-cost-note">This estimate covers the room rate only. Final taxes, discounts, and payment instructions are confirmed by the hotel.</p>
                         <div class="step-actions">
                             <button type="button" class="secondary-step-button" data-prev-step>Back</button>
                             <button type="submit" class="primary-button form-submit">Send booking request</button>
@@ -189,10 +244,62 @@
                     </div>
                 </article>
             </section>
+
+            <aside class="booking-aside" aria-label="Reservation support and summary">
+                <div class="booking-side-visual" data-micro-card>
+                    <img src="../static/images/alev-takil-lw3Lqe2K7xc-unsplash.jpg" alt="Breakfast served in a hotel room" loading="lazy" decoding="async">
+                    <div class="availability-card">
+                        <strong>Reservations desk</strong>
+                        <span>Open daily, 7:00 AM to 10:00 PM</span>
+                    </div>
+                </div>
+
+                <div class="stay-summary-panel" data-micro-card>
+                    <span class="section-kicker">Live summary</span>
+                    <h2>Your stay</h2>
+                    <dl>
+                        <div>
+                            <dt>Dates</dt>
+                            <dd data-summary="dates">Select check-in and check-out</dd>
+                        </div>
+                        <div>
+                            <dt>Room</dt>
+                            <dd data-summary="room">Deluxe Room</dd>
+                        </div>
+                        <div>
+                            <dt>Guests</dt>
+                            <dd data-summary="guests">2 guests</dd>
+                        </div>
+                        <div>
+                            <dt>Estimate</dt>
+                            <dd data-summary="estimate">Complete dates</dd>
+                        </div>
+                    </dl>
+                    <p>Submit the request when the summary looks right. The hotel will confirm availability before payment.</p>
+                </div>
+
+                <div class="booking-note" data-micro-card>
+                    <span class="section-kicker">What happens next</span>
+                    <ol>
+                        <li>We check room availability for your dates.</li>
+                        <li>You receive confirmation and payment guidance.</li>
+                        <li>The front desk prepares your arrival details.</li>
+                    </ol>
+                </div>
+            </aside>
         </section>
     </main>
 
-    <footer>
+    <footer class="home-footer">
+        <div>
+            <strong>GSS Hotel</strong>
+            <span>Refined rooms, warm service, and practical city stays.</span>
+        </div>
+        <nav aria-label="Footer navigation">
+            <a href="booking.html">Booking</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+        </nav>
         <p>&copy; 2026 GSS Hotel. All rights reserved.</p>
     </footer>
 
