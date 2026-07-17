@@ -81,6 +81,43 @@ class Database:
             connection.commit()
             return inserted_id
 
+    def count_bookings_by_room(self, *, check_in: str, check_out: str) -> dict[str, int]:
+        candidate = self._get_active_candidate()
+        placeholder = self._placeholder(candidate.engine)
+        sql = (
+            "SELECT room_type, COUNT(*) FROM bookings "
+            f"WHERE check_in < {placeholder} AND check_out > {placeholder} "
+            "GROUP BY room_type"
+        )
+
+        with self._connect(candidate) as connection:
+            cursor = connection.cursor()
+            cursor.execute(sql, (check_out, check_in))
+            return {str(room_type).lower(): int(count) for room_type, count in cursor.fetchall()}
+
+    def find_booking(self, *, booking_id: int, email: str) -> dict[str, Any] | None:
+        candidate = self._get_active_candidate()
+        placeholder = self._placeholder(candidate.engine)
+        sql = (
+            "SELECT id, check_in, check_out, room_type, guests, name, email, phone, created_at "
+            f"FROM bookings WHERE id = {placeholder} AND email = {placeholder}"
+        )
+
+        with self._connect(candidate) as connection:
+            cursor = connection.cursor()
+            cursor.execute(sql, (booking_id, email))
+            row = cursor.fetchone()
+
+        if not row:
+            return None
+
+        keys = ("id", "check_in", "check_out", "room_type", "guests", "name", "email", "phone", "created_at")
+        booking = dict(zip(keys, row))
+        booking["id"] = int(booking["id"])
+        booking["room_type"] = str(booking["room_type"]).lower()
+        booking["status"] = "pending"
+        return booking
+
     def _get_active_candidate(self) -> DatabaseCandidate:
         if self._active is not None:
             return self._active

@@ -17,10 +17,22 @@ from database import Database, load_env
 BASE_DIR = Path(__file__).resolve().parent
 BOOKINGS_JSON_PATH = BASE_DIR / "instance" / "bookings.json"
 BOOKINGS_JSON_LOCK = Lock()
-BOOKING_CONFIRMATIONS_JSON_PATH = BASE_DIR / "instance" / "booking_confirmations.json"
-BOOKING_CONFIRMATIONS_JSON_LOCK = Lock()
+BOOKING_STATUSES_JSON_PATH = BASE_DIR / "instance" / "booking_statuses.json"
 CONTACTS_JSON_PATH = BASE_DIR / "instance" / "contacts.json"
 CONTACTS_JSON_LOCK = Lock()
+ROOM_INVENTORY = {
+    "deluxe": 10,
+    "executive": 5,
+    "presidential": 2,
+}
+ACTIVE_BOOKING_STATUSES = {"pending", "accepted", "confirmed"}
+STATUS_LABELS = {
+    "pending": "Still in review",
+    "accepted": "Accepted",
+    "confirmed": "Accepted",
+    "rejected": "Not accepted",
+    "cancelled": "Cancelled",
+}
 
 
 def create_app() -> Flask:
@@ -65,6 +77,21 @@ def create_app() -> Flask:
         status_code = 200 if db_status["ok"] else 503
         return jsonify({"ok": db_status["ok"], "database": db_status}), status_code
 
+    @app.post("/api/availability")
+    def check_availability():
+        payload = _request_payload()
+        errors = _validate_availability(payload)
+
+        if errors:
+            return jsonify({"ok": False, "errors": errors}), 400
+
+        availability = _availability_for_dates(
+            database,
+            str(payload["check_in"]),
+            str(payload["check_out"]),
+        )
+        return jsonify({"ok": True, "rooms": availability}), 200
+
     @app.post("/api/bookings")
     def create_booking():
         payload = _request_payload()
@@ -82,6 +109,23 @@ def create_app() -> Flask:
             "email": payload["email"].strip(),
             "phone": payload["phone"].strip(),
         }
+        availability = _availability_for_dates(
+            database,
+            booking_data["check_in"],
+            booking_data["check_out"],
+        )
+        room_availability = availability.get(booking_data["room_type"], {})
+
+        if int(room_availability.get("available", 0)) <= 0:
+            return jsonify(
+                {
+                    "ok": False,
+                    "errors": {
+                        "room_type": "That room type is fully booked for the selected dates.",
+                    },
+                    "availability": availability,
+                }
+            ), 409
 
         try:
             booking_id = database.create_booking(**booking_data)
@@ -97,35 +141,46 @@ def create_app() -> Flask:
                 "ok": True,
                 "id": booking_id,
                 "storage": storage,
+                "status": "pending",
+                "availability": availability,
                 "message": "Booking request received.",
             }
         ), 201
 
-    @app.post("/api/bookings/confirm")
-    def confirm_booking():
+    @app.post("/api/bookings/status")
+    def booking_status():
         payload = _request_payload()
-        errors = _validate_booking_confirmation(payload)
+        errors = _validate_booking_status_lookup(payload)
 
         if errors:
             return jsonify({"ok": False, "errors": errors}), 400
 
-        confirmation = _save_booking_confirmation(
-            {
-                "booking_id": _booking_id_from_reference(payload["booking_id"]),
-                "booking_reference": str(payload["booking_id"]).strip(),
-                "email": payload["email"].strip(),
-                "storage": str(payload.get("storage", "unknown")).strip() or "unknown",
-            }
+        booking = _find_booking_for_status(
+            database,
+            str(payload["booking_id"]).strip(),
+            str(payload["email"]).strip(),
         )
 
+        if booking is None:
+            return jsonify(
+                {
+                    "ok": False,
+                    "errors": {
+                        "booking_id": "No booking found for that reference and email.",
+                    },
+                }
+            ), 404
+
+        status = _booking_status(booking)
         return jsonify(
             {
                 "ok": True,
-                "id": confirmation["id"],
-                "status": "confirmed",
-                "message": "Booking confirmed.",
+                "booking": _public_booking(booking, status),
+                "status": status,
+                "label": STATUS_LABELS.get(status, status.title()),
+                "message": _status_message(status),
             }
-        ), 201
+        ), 200
 
     @app.post("/api/contact")
     def create_contact():
@@ -192,6 +247,7 @@ def _save_booking_to_json(booking_data: dict[str, Any]) -> int:
         bookings.append(
             {
                 "id": next_id,
+                "status": "pending",
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 **booking_data,
             }
@@ -224,80 +280,6 @@ def _next_json_booking_id(bookings: list[dict[str, Any]]) -> int:
     return max(numeric_ids, default=0) + 1
 
 
-def _save_booking_confirmation(confirmation_data: dict[str, Any]) -> dict[str, Any]:
-    with BOOKING_CONFIRMATIONS_JSON_LOCK:
-        BOOKING_CONFIRMATIONS_JSON_PATH.parent.mkdir(exist_ok=True)
-        confirmations = _read_json_list(BOOKING_CONFIRMATIONS_JSON_PATH)
-        existing = _find_existing_confirmation(confirmations, confirmation_data)
-
-        if existing is not None:
-            existing["status"] = "confirmed"
-            existing["confirmed_at"] = datetime.now(timezone.utc).isoformat()
-            BOOKING_CONFIRMATIONS_JSON_PATH.write_text(
-                json.dumps(confirmations, indent=2),
-                encoding="utf-8",
-            )
-            _mark_json_booking_confirmed(confirmation_data)
-            return existing
-
-        confirmation = {
-            "id": _next_numeric_json_id(confirmations),
-            "status": "confirmed",
-            "confirmed_at": datetime.now(timezone.utc).isoformat(),
-            **confirmation_data,
-        }
-        confirmations.append(confirmation)
-        BOOKING_CONFIRMATIONS_JSON_PATH.write_text(
-            json.dumps(confirmations, indent=2),
-            encoding="utf-8",
-        )
-        _mark_json_booking_confirmed(confirmation_data)
-        return confirmation
-
-
-def _find_existing_confirmation(
-    confirmations: list[dict[str, Any]],
-    confirmation_data: dict[str, Any],
-) -> dict[str, Any] | None:
-    booking_reference = str(confirmation_data["booking_reference"]).strip().lower()
-    email = str(confirmation_data["email"]).strip().lower()
-
-    for confirmation in confirmations:
-        if (
-            str(confirmation.get("booking_reference", "")).strip().lower() == booking_reference
-            and str(confirmation.get("email", "")).strip().lower() == email
-        ):
-            return confirmation
-
-    return None
-
-
-def _mark_json_booking_confirmed(confirmation_data: dict[str, Any]) -> None:
-    booking_id = confirmation_data.get("booking_id")
-
-    if booking_id is None:
-        return
-
-    with BOOKINGS_JSON_LOCK:
-        bookings = _read_json_bookings()
-        changed = False
-
-        for booking in bookings:
-            if booking.get("id") != booking_id:
-                continue
-
-            if str(booking.get("email", "")).strip().lower() != str(confirmation_data["email"]).strip().lower():
-                continue
-
-            booking["status"] = "confirmed"
-            booking["confirmed_at"] = datetime.now(timezone.utc).isoformat()
-            changed = True
-            break
-
-        if changed:
-            BOOKINGS_JSON_PATH.write_text(json.dumps(bookings, indent=2), encoding="utf-8")
-
-
 def _read_json_list(path: Path) -> list[dict[str, Any]]:
     if not path.is_file():
         return []
@@ -310,18 +292,6 @@ def _read_json_list(path: Path) -> list[dict[str, Any]]:
     return data if isinstance(data, list) else []
 
 
-def _next_numeric_json_id(items: list[dict[str, Any]]) -> int:
-    numeric_ids: list[int] = []
-
-    for item in items:
-        try:
-            numeric_ids.append(int(item.get("id", 0)))
-        except (TypeError, ValueError):
-            continue
-
-    return max(numeric_ids, default=0) + 1
-
-
 def _booking_id_from_reference(value: Any) -> int | None:
     reference = str(value).strip()
     digits = "".join(character for character in reference if character.isdigit())
@@ -330,6 +300,142 @@ def _booking_id_from_reference(value: Any) -> int | None:
         return None
 
     return int(digits)
+
+
+def _availability_for_dates(database: Database, check_in: str, check_out: str) -> dict[str, dict[str, Any]]:
+    booked_counts = {room_type: 0 for room_type in ROOM_INVENTORY}
+
+    try:
+        for room_type, count in database.count_bookings_by_room(check_in=check_in, check_out=check_out).items():
+            if room_type in booked_counts:
+                booked_counts[room_type] += count
+    except Exception:
+        pass
+
+    for booking in _read_json_bookings():
+        if not _booking_overlaps(booking, check_in, check_out):
+            continue
+
+        status = str(booking.get("status", "pending")).strip().lower() or "pending"
+        room_type = str(booking.get("room_type", "")).strip().lower()
+
+        if room_type in booked_counts and status in ACTIVE_BOOKING_STATUSES:
+            booked_counts[room_type] += 1
+
+    return {
+        room_type: {
+            "room_type": room_type,
+            "label": _room_label(room_type),
+            "total": total,
+            "booked": min(booked_counts[room_type], total),
+            "available": max(total - booked_counts[room_type], 0),
+            "sold_out": booked_counts[room_type] >= total,
+        }
+        for room_type, total in ROOM_INVENTORY.items()
+    }
+
+
+def _booking_overlaps(booking: dict[str, Any], check_in: str, check_out: str) -> bool:
+    booking_check_in = str(booking.get("check_in", ""))
+    booking_check_out = str(booking.get("check_out", ""))
+    return booking_check_in < check_out and booking_check_out > check_in
+
+
+def _find_booking_for_status(database: Database, booking_reference: str, email: str) -> dict[str, Any] | None:
+    email_key = email.strip().lower()
+
+    for booking in _read_json_bookings():
+        if not _reference_matches_booking(booking_reference, booking):
+            continue
+
+        if str(booking.get("email", "")).strip().lower() == email_key:
+            return booking
+
+    booking_id = _booking_id_from_reference(booking_reference)
+
+    if booking_id is None:
+        return None
+
+    try:
+        return database.find_booking(booking_id=booking_id, email=email.strip())
+    except Exception:
+        return None
+
+
+def _reference_matches_booking(reference: str, booking: dict[str, Any]) -> bool:
+    clean_reference = reference.strip().lower()
+    booking_id = str(booking.get("id", "")).strip().lower()
+    padded_reference = f"gss-{str(booking.get('id', '')).zfill(4)}".lower()
+    return clean_reference in {booking_id, padded_reference}
+
+
+def _booking_status(booking: dict[str, Any]) -> str:
+    override = _booking_status_override(booking)
+
+    if override:
+        return override
+
+    return str(booking.get("status", "pending")).strip().lower() or "pending"
+
+
+def _booking_status_override(booking: dict[str, Any]) -> str | None:
+    overrides = _read_json_list(BOOKING_STATUSES_JSON_PATH)
+    booking_id = str(booking.get("id", "")).strip().lower()
+    booking_reference = _booking_reference(booking.get("id")).strip().lower()
+    email = str(booking.get("email", "")).strip().lower()
+
+    for override in reversed(overrides):
+        reference = str(override.get("booking_id", override.get("booking_reference", ""))).strip().lower()
+        override_email = str(override.get("email", "")).strip().lower()
+        status = str(override.get("status", "")).strip().lower()
+
+        if reference in {booking_id, booking_reference} and override_email == email and status:
+            return status
+
+    return None
+
+
+def _public_booking(booking: dict[str, Any], status: str) -> dict[str, Any]:
+    return {
+        "id": booking.get("id"),
+        "reference": _booking_reference(booking.get("id")),
+        "status": status,
+        "status_label": STATUS_LABELS.get(status, status.title()),
+        "check_in": str(booking.get("check_in", "")),
+        "check_out": str(booking.get("check_out", "")),
+        "room_type": str(booking.get("room_type", "")),
+        "room_label": _room_label(str(booking.get("room_type", ""))),
+        "guests": booking.get("guests"),
+        "name": booking.get("name"),
+    }
+
+
+def _booking_reference(booking_id: Any) -> str:
+    if str(booking_id).upper().startswith("LOCAL-"):
+        return str(booking_id)
+
+    try:
+        return f"GSS-{int(booking_id):04d}"
+    except (TypeError, ValueError):
+        return str(booking_id or "Pending")
+
+
+def _room_label(room_type: str) -> str:
+    return {
+        "deluxe": "Deluxe Room",
+        "executive": "Executive Suite",
+        "presidential": "Presidential Suite",
+    }.get(room_type, room_type.title())
+
+
+def _status_message(status: str) -> str:
+    if status in {"accepted", "confirmed"}:
+        return "Your booking request was accepted. Your room is still okay."
+    if status == "rejected":
+        return "Your booking request was not accepted. Please choose another room or contact the hotel."
+    if status == "cancelled":
+        return "This booking is cancelled."
+    return "Your booking request is still waiting for hotel approval."
 
 
 def _save_contact_to_json(contact_data: dict[str, Any]) -> int:
@@ -430,7 +536,30 @@ def _validate_booking(payload: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
-def _validate_booking_confirmation(payload: dict[str, Any]) -> dict[str, str]:
+def _validate_availability(payload: dict[str, Any]) -> dict[str, str]:
+    errors: dict[str, str] = {}
+
+    for field in ("check_in", "check_out"):
+        if not str(payload.get(field, "")).strip():
+            errors[field] = "This field is required."
+
+    if errors:
+        return errors
+
+    check_in = _parse_date(payload["check_in"])
+    check_out = _parse_date(payload["check_out"])
+
+    if check_in is None:
+        errors["check_in"] = "Use a valid check-in date."
+    if check_out is None:
+        errors["check_out"] = "Use a valid check-out date."
+    if check_in and check_out and check_out <= check_in:
+        errors["check_out"] = "Check-out must be after check-in."
+
+    return errors
+
+
+def _validate_booking_status_lookup(payload: dict[str, Any]) -> dict[str, str]:
     errors: dict[str, str] = {}
 
     if not str(payload.get("booking_id", "")).strip():

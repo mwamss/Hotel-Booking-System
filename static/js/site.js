@@ -139,80 +139,12 @@ function storeOfflineBooking(payload) {
     };
 }
 
-async function confirmStoredBooking(booking) {
-    if (booking.storage === "browser-json") {
-        return storeOfflineBookingConfirmation(booking);
-    }
-
-    const response = await fetch(apiEndpoint("/api/bookings/confirm"), {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            booking_id: booking.id,
-            email: booking.email,
-            storage: booking.storage,
-        }),
-    });
-    const data = await response.json();
-
-    if (!response.ok || !data.ok) {
-        throw new Error(data.errors ? Object.values(data.errors)[0] : "Unable to confirm booking.");
-    }
-
-    return data;
-}
-
-function storeOfflineBookingConfirmation(booking) {
-    const storageKey = "gss_hotel_offline_booking_confirmations";
-    const rawConfirmations = window.localStorage.getItem(storageKey);
-    const parsedConfirmations = rawConfirmations ? JSON.parse(rawConfirmations) : [];
-    const confirmations = Array.isArray(parsedConfirmations) ? parsedConfirmations : [];
-    const confirmedAt = new Date().toISOString();
-    const confirmation = {
-        id: `LOCAL-${String(confirmations.length + 1).padStart(4, "0")}`,
-        booking_id: booking.id,
-        booking_reference: booking.reference || booking.id,
-        email: booking.email,
-        storage: booking.storage || "browser-json",
-        status: "confirmed",
-        confirmed_at: confirmedAt,
-    };
-
-    confirmations.push(confirmation);
-    window.localStorage.setItem(storageKey, JSON.stringify(confirmations, null, 2));
-    markOfflineBookingConfirmed(booking.id, booking.email, confirmedAt);
-    return {
-        ok: true,
-        id: confirmation.id,
-        status: "confirmed",
-        storage: "browser-json",
-        message: "Booking confirmed locally.",
-    };
-}
-
-function markOfflineBookingConfirmed(bookingId, email, confirmedAt) {
+function readOfflineBookings() {
     const storageKey = "gss_hotel_offline_bookings";
     const rawBookings = window.localStorage.getItem(storageKey);
     const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
-    const bookings = Array.isArray(parsedBookings) ? parsedBookings : [];
-    let changed = false;
 
-    bookings.forEach((booking) => {
-        const sameId = String(booking.id) === String(bookingId);
-        const sameEmail = String(booking.email || "").toLowerCase() === String(email || "").toLowerCase();
-
-        if (sameId && sameEmail) {
-            booking.status = "confirmed";
-            booking.confirmed_at = confirmedAt;
-            changed = true;
-        }
-    });
-
-    if (changed) {
-        window.localStorage.setItem(storageKey, JSON.stringify(bookings, null, 2));
-    }
+    return Array.isArray(parsedBookings) ? parsedBookings : [];
 }
 
 function storeOfflineContact(payload) {
@@ -265,6 +197,23 @@ function networkErrorMessage() {
     return "Unable to send right now. Make sure the Flask backend is running, then try again.";
 }
 
+async function postJson(endpoint, payload) {
+    const response = await fetch(apiEndpoint(endpoint), {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+        throw new Error(data.errors ? Object.values(data.errors)[0] : "Request failed.");
+    }
+
+    return data;
+}
+
 const roomRates = {
     deluxe: 14500,
     executive: 21500,
@@ -296,6 +245,34 @@ function formatRoomType(value) {
     return roomLabels[value] || value;
 }
 
+function formatStatus(value) {
+    const labels = {
+        pending: "Still in review",
+        accepted: "Accepted",
+        confirmed: "Accepted",
+        rejected: "Not accepted",
+        cancelled: "Cancelled",
+    };
+
+    return labels[value] || value;
+}
+
+function statusMessage(status) {
+    if (["accepted", "confirmed"].includes(status)) {
+        return "Your booking request was accepted. Your room is still okay.";
+    }
+
+    if (status === "rejected") {
+        return "Your booking request was not accepted. Please choose another room or contact the hotel.";
+    }
+
+    if (status === "cancelled") {
+        return "This booking is cancelled.";
+    }
+
+    return "Your booking request is still waiting for hotel approval.";
+}
+
 function formatCurrency(value) {
     return new Intl.NumberFormat("en-KE", {
         style: "currency",
@@ -313,6 +290,149 @@ function calculateNights(checkInValue, checkOutValue) {
     }
 
     return Math.round((checkOut - checkIn) / 86400000);
+}
+
+function bookingOverlaps(booking, checkInValue, checkOutValue) {
+    return booking.check_in < checkOutValue && booking.check_out > checkInValue;
+}
+
+function offlineAvailability(checkInValue, checkOutValue) {
+    const inventory = {
+        deluxe: { room_type: "deluxe", label: "Deluxe Room", total: 10, booked: 0 },
+        executive: { room_type: "executive", label: "Executive Suite", total: 5, booked: 0 },
+        presidential: { room_type: "presidential", label: "Presidential Suite", total: 2, booked: 0 },
+    };
+
+    readOfflineBookings().forEach((booking) => {
+        const roomType = String(booking.room_type || "").toLowerCase();
+        const status = String(booking.status || "pending").toLowerCase();
+
+        if (!inventory[roomType] || ["rejected", "cancelled"].includes(status)) {
+            return;
+        }
+
+        if (bookingOverlaps(booking, checkInValue, checkOutValue)) {
+            inventory[roomType].booked += 1;
+        }
+    });
+
+    Object.values(inventory).forEach((room) => {
+        room.available = Math.max(room.total - room.booked, 0);
+        room.sold_out = room.available <= 0;
+    });
+
+    return inventory;
+}
+
+async function refreshAvailability(form) {
+    const payload = readForm(form);
+
+    if (!payload.check_in || !payload.check_out || calculateNights(payload.check_in, payload.check_out) <= 0) {
+        updateAvailabilityBadges(null);
+        return;
+    }
+
+    try {
+        const data = await postJson("/api/availability", {
+            check_in: payload.check_in,
+            check_out: payload.check_out,
+        });
+        updateAvailabilityBadges(data.rooms);
+    } catch (error) {
+        updateAvailabilityBadges(offlineAvailability(payload.check_in, payload.check_out));
+    }
+}
+
+function updateAvailabilityBadges(rooms) {
+    document.querySelectorAll("[data-room-availability]").forEach((target) => {
+        const roomType = target.dataset.roomAvailability;
+        const room = rooms ? rooms[roomType] : null;
+        const choice = target.closest(".room-choice");
+
+        target.classList.remove("is-sold-out", "is-available");
+
+        if (!room) {
+            target.textContent = "Select dates";
+            choice?.classList.remove("is-sold-out");
+            return;
+        }
+
+        if (room.sold_out) {
+            target.textContent = "Fully booked";
+            target.classList.add("is-sold-out");
+            choice?.classList.add("is-sold-out");
+            return;
+        }
+
+        target.textContent = `${room.available} of ${room.total} rooms left`;
+        target.classList.add("is-available");
+        choice?.classList.remove("is-sold-out");
+    });
+}
+
+async function lookupBookingStatus(payload) {
+    try {
+        return await postJson("/api/bookings/status", payload);
+    } catch (error) {
+        const booking = findOfflineBooking(payload.booking_id, payload.email);
+
+        if (!booking) {
+            throw error;
+        }
+
+        const status = String(booking.status || "pending").toLowerCase();
+        return {
+            ok: true,
+            status,
+            label: formatStatus(status),
+            message: statusMessage(status),
+            booking: {
+                id: booking.id,
+                reference: booking.id,
+                status,
+                status_label: formatStatus(status),
+                check_in: booking.check_in,
+                check_out: booking.check_out,
+                room_type: booking.room_type,
+                room_label: formatRoomType(booking.room_type),
+                guests: booking.guests,
+                name: booking.name,
+            },
+        };
+    }
+}
+
+function findOfflineBooking(reference, email) {
+    const cleanReference = String(reference || "").trim().toLowerCase();
+    const cleanEmail = String(email || "").trim().toLowerCase();
+
+    return readOfflineBookings().find((booking) => {
+        const bookingId = String(booking.id || "").trim().toLowerCase();
+        const bookingEmail = String(booking.email || "").trim().toLowerCase();
+        return bookingId === cleanReference && bookingEmail === cleanEmail;
+    });
+}
+
+function showBookingStatusResult(target, data) {
+    const booking = data.booking || {};
+    const dates = booking.check_in && booking.check_out
+        ? `${formatDisplayDate(booking.check_in)} to ${formatDisplayDate(booking.check_out)}`
+        : "Dates unavailable";
+    const room = booking.room_label || formatRoomType(booking.room_type || "");
+
+    target.hidden = false;
+    target.classList.remove("is-error", "is-confirmed");
+    if (["accepted", "confirmed"].includes(data.status)) {
+        target.classList.add("is-confirmed");
+    }
+    target.textContent = `${data.label}: ${data.message} ${room ? `${room}, ` : ""}${dates}.`;
+}
+
+function showBookingStatusError(target, message) {
+    target.hidden = false;
+    target.classList.remove("is-confirmed");
+    target.classList.add("is-error");
+    target.textContent = message;
 }
 
 function selectedRoomInput(form) {
@@ -381,6 +501,7 @@ function setupBookingDates(form) {
         }
 
         updateStaySummary(form);
+        refreshAvailability(form);
     };
 
     checkIn.addEventListener("change", () => {
@@ -397,7 +518,6 @@ function setupBookingDates(form) {
 
 function showBookingConfirmation({ data, form, messageElement, payload, successText }) {
     const confirmation = document.querySelector("#booking-confirmation");
-    const confirmButton = document.querySelector("#confirm-booking-button");
     const confirmStatus = document.querySelector("#booking-confirm-status");
 
     if (!confirmation) {
@@ -424,15 +544,20 @@ function showBookingConfirmation({ data, form, messageElement, payload, successT
     document.querySelector("#confirmation-dates").textContent = dates;
     document.querySelector("#confirmation-room").textContent = room;
     document.querySelector("#confirmation-contact").textContent = contact;
+    const statusBookingId = document.querySelector("#status-booking-id");
+    const statusEmail = document.querySelector("#status-email");
 
-    if (confirmStatus) {
-        confirmStatus.textContent = "Ready for guest confirmation.";
-        confirmStatus.classList.remove("is-confirmed", "is-error");
+    if (statusBookingId) {
+        statusBookingId.value = reference;
     }
 
-    if (confirmButton) {
-        confirmButton.disabled = false;
-        confirmButton.textContent = "Confirm booking";
+    if (statusEmail) {
+        statusEmail.value = payload.email;
+    }
+
+    if (confirmStatus) {
+        confirmStatus.textContent = "Status: still in review. Use the checker above later to see if it has been accepted.";
+        confirmStatus.classList.remove("is-confirmed", "is-error");
     }
 
     form.reset();
@@ -445,67 +570,11 @@ function showBookingConfirmation({ data, form, messageElement, payload, successT
 function setupBookingConfirmationReset(form) {
     const confirmation = document.querySelector("#booking-confirmation");
     const newBookingButton = document.querySelector("#new-booking-button");
-    const confirmButton = document.querySelector("#confirm-booking-button");
     const confirmStatus = document.querySelector("#booking-confirm-status");
     const message = document.querySelector("#booking-message");
 
     if (!confirmation || !newBookingButton) {
         return;
-    }
-
-    if (confirmButton) {
-        confirmButton.addEventListener("click", async () => {
-            const booking = {
-                id: confirmation.dataset.bookingId,
-                reference: confirmation.dataset.bookingReference,
-                email: confirmation.dataset.bookingEmail,
-                storage: confirmation.dataset.bookingStorage,
-            };
-
-            if (!booking.id || !booking.email) {
-                if (confirmStatus) {
-                    confirmStatus.textContent = "Booking details are missing. Please submit the request again.";
-                    confirmStatus.classList.add("is-error");
-                }
-                return;
-            }
-
-            confirmButton.disabled = true;
-            confirmButton.textContent = "Confirming...";
-
-            try {
-                await confirmStoredBooking(booking);
-
-                if (confirmStatus) {
-                    confirmStatus.textContent = "Booking confirmed. Keep the reference for check-in.";
-                    confirmStatus.classList.add("is-confirmed");
-                    confirmStatus.classList.remove("is-error");
-                }
-
-                confirmButton.textContent = "Booking confirmed";
-            } catch (error) {
-                try {
-                    storeOfflineBookingConfirmation(booking);
-
-                    if (confirmStatus) {
-                        confirmStatus.textContent = "Booking confirmed locally. The hotel can sync it when the backend is available.";
-                        confirmStatus.classList.add("is-confirmed");
-                        confirmStatus.classList.remove("is-error");
-                    }
-
-                    confirmButton.textContent = "Booking confirmed";
-                } catch (storageError) {
-                    confirmButton.disabled = false;
-                    confirmButton.textContent = "Confirm booking";
-
-                    if (confirmStatus) {
-                        confirmStatus.textContent = "Unable to confirm right now. Please try again.";
-                        confirmStatus.classList.add("is-error");
-                        confirmStatus.classList.remove("is-confirmed");
-                    }
-                }
-            }
-        });
     }
 
     newBookingButton.addEventListener("click", () => {
@@ -514,13 +583,14 @@ function setupBookingConfirmationReset(form) {
         form.reset();
         setBookingStep(form, 0);
         updateStaySummary(form);
+        updateAvailabilityBadges(null);
         delete confirmation.dataset.bookingId;
         delete confirmation.dataset.bookingReference;
         delete confirmation.dataset.bookingEmail;
         delete confirmation.dataset.bookingStorage;
 
         if (confirmStatus) {
-            confirmStatus.textContent = "Ready for guest confirmation.";
+            confirmStatus.textContent = "Status: still in review. Use the checker above later to see if it has been accepted.";
             confirmStatus.classList.remove("is-confirmed", "is-error");
         }
 
@@ -810,12 +880,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const bookingForm = document.querySelector("#booking-form");
     const bookingMessage = document.querySelector("#booking-message");
+    const bookingStatusForm = document.querySelector("#booking-status-form");
+    const bookingStatusMessage = document.querySelector("#booking-status-message");
 
     if (bookingForm) {
         setupBookingDates(bookingForm);
         setupBookingFlow(bookingForm);
         setupBookingConfirmationReset(bookingForm);
         updateStaySummary(bookingForm);
+        updateAvailabilityBadges(null);
 
         bookingForm.addEventListener("submit", (event) => {
             event.preventDefault();
@@ -828,6 +901,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 busyText: "Sending request...",
                 onSuccess: showBookingConfirmation,
             });
+        });
+    }
+
+    if (bookingStatusForm && bookingStatusMessage) {
+        bookingStatusForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            if (!bookingStatusForm.checkValidity()) {
+                bookingStatusForm.reportValidity();
+                return;
+            }
+
+            const payload = readForm(bookingStatusForm);
+            showMessage(bookingStatusMessage, "Checking status...", "success");
+
+            try {
+                const data = await lookupBookingStatus(payload);
+                showBookingStatusResult(bookingStatusMessage, data);
+            } catch (error) {
+                showBookingStatusError(bookingStatusMessage, error.message || "No booking found for that reference and email.");
+            }
         });
     }
 

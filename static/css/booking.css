@@ -238,6 +238,67 @@
     line-height: 1.45;
 }
 
+.booking-status-check {
+    display: grid;
+    gap: 16px;
+    margin-top: 24px;
+    padding: 18px;
+    background: #fffaf2;
+    border: 1px solid rgba(166, 111, 63, 0.16);
+    border-radius: 8px;
+}
+
+.booking-status-check h3 {
+    margin: 0;
+    color: #203238;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.25rem, 2vw, 1.65rem);
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.booking-status-check p {
+    margin: 8px 0 0;
+    color: #667277;
+    line-height: 1.55;
+}
+
+.status-check-form {
+    display: grid;
+    gap: 12px;
+}
+
+.status-check-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.status-check-result {
+    flex: 1 1 260px;
+    margin: 0;
+    padding: 12px 13px;
+    background: #ffffff;
+    color: #5c6a6f;
+    border: 1px solid rgba(32, 50, 56, 0.1);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+.status-check-result.is-confirmed {
+    background: #edf6ef;
+    color: #23613a;
+    border-color: rgba(35, 97, 58, 0.18);
+}
+
+.status-check-result.is-error {
+    background: #fff1ed;
+    color: #9a3f2e;
+    border-color: rgba(154, 63, 46, 0.2);
+}
+
 .booking-progress {
     counter-reset: booking-step;
     display: grid;
@@ -457,6 +518,24 @@
     background: #ffffff;
     transform: translateY(-1px);
     box-shadow: 0 16px 34px rgba(32, 50, 56, 0.1);
+}
+
+.room-choice.is-sold-out .room-choice-body {
+    background: #f3eee7;
+    border-color: rgba(154, 63, 46, 0.18);
+}
+
+.room-choice.is-sold-out .room-choice-copy,
+.room-choice.is-sold-out .room-choice-top span {
+    color: #8f6f63;
+}
+
+[data-room-availability].is-available {
+    color: #23613a;
+}
+
+[data-room-availability].is-sold-out {
+    color: #9a3f2e;
 }
 
 .room-choice input:focus-visible + .room-choice-body {
@@ -762,6 +841,16 @@
 
     .booking-progress {
         grid-template-columns: 1fr;
+    }
+
+    .status-check-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .status-check-actions .secondary-step-button,
+    .status-check-result {
+        width: 100%;
     }
 
     .booking-progress li {

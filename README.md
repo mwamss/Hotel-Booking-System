@@ -31,7 +31,9 @@ A simple hotel booking website now backed by Flask.
 
 If PostgreSQL or MySQL is configured and reachable, the backend will use it and create the required `bookings` and `contacts` tables. If not, `DB_ENGINE=auto` can fall back to `instance/hotel_booking.sqlite3` for local development.
 
-Bookings, booking confirmations, and contact messages have an extra JSON fallback: if the Flask app is running but the database cannot save, requests are appended to `instance/bookings.json`, `instance/booking_confirmations.json`, or `instance/contacts.json`. If the page is opened while Flask is not running, the browser saves JSON in local storage under `gss_hotel_offline_bookings`, `gss_hotel_offline_booking_confirmations`, or `gss_hotel_offline_contacts` so the user still gets a confirmation.
+Bookings and contact messages have an extra JSON fallback: if the Flask app is running but the database cannot save, requests are appended to `instance/bookings.json` or `instance/contacts.json`. Booking status overrides can be stored in `instance/booking_statuses.json`. If the page is opened while Flask is not running, the browser saves JSON in local storage under `gss_hotel_offline_bookings` or `gss_hotel_offline_contacts` so the user still gets a confirmation.
+
+To mark a booking as accepted or rejected without changing the database, add an item such as `{"booking_reference": "GSS-0001", "email": "guest@example.com", "status": "accepted"}` to `instance/booking_statuses.json`.
 
 ## Database Options
 
@@ -67,6 +69,7 @@ Set `SQLITE_FALLBACK=0` if you want startup to fail when the configured PostgreS
 ## API
 
 - `GET /api/health` checks the application database connection.
+- `POST /api/availability` returns available room counts for selected dates.
 - `POST /api/bookings` creates a booking request.
-- `POST /api/bookings/confirm` confirms a booking request by reference and email.
+- `POST /api/bookings/status` checks whether a booking request is pending, accepted, rejected, or cancelled.
 - `POST /api/contact` stores a contact message.
