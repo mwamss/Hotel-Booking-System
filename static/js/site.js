@@ -90,6 +90,18 @@ async function submitForm(form, endpoint, messageElement, successText, options =
             }
         }
 
+        if (isContactEndpoint(endpoint)) {
+            try {
+                storeOfflineContact(payload);
+                form.reset();
+                showMessage(messageElement, "Message saved locally. The hotel can sync it when the backend is available.", "success");
+                return;
+            } catch (storageError) {
+                showMessage(messageElement, "Unable to save this message locally. Please try again.", "error");
+                return;
+            }
+        }
+
         showMessage(messageElement, networkErrorMessage(), "error");
     } finally {
         setFormBusy(form, false);
@@ -100,6 +112,10 @@ function isBookingEndpoint(endpoint) {
     return /\/api\/bookings$/i.test(endpoint);
 }
 
+function isContactEndpoint(endpoint) {
+    return /\/api\/contact$/i.test(endpoint);
+}
+
 function storeOfflineBooking(payload) {
     const storageKey = "gss_hotel_offline_bookings";
     const rawBookings = window.localStorage.getItem(storageKey);
@@ -108,6 +124,7 @@ function storeOfflineBooking(payload) {
     const booking = {
         id: `LOCAL-${String(bookings.length + 1).padStart(4, "0")}`,
         storage: "browser-json",
+        status: "pending",
         created_at: new Date().toISOString(),
         ...payload,
     };
@@ -119,6 +136,104 @@ function storeOfflineBooking(payload) {
         id: booking.id,
         storage: booking.storage,
         message: "Booking saved locally.",
+    };
+}
+
+async function confirmStoredBooking(booking) {
+    if (booking.storage === "browser-json") {
+        return storeOfflineBookingConfirmation(booking);
+    }
+
+    const response = await fetch(apiEndpoint("/api/bookings/confirm"), {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            booking_id: booking.id,
+            email: booking.email,
+            storage: booking.storage,
+        }),
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+        throw new Error(data.errors ? Object.values(data.errors)[0] : "Unable to confirm booking.");
+    }
+
+    return data;
+}
+
+function storeOfflineBookingConfirmation(booking) {
+    const storageKey = "gss_hotel_offline_booking_confirmations";
+    const rawConfirmations = window.localStorage.getItem(storageKey);
+    const parsedConfirmations = rawConfirmations ? JSON.parse(rawConfirmations) : [];
+    const confirmations = Array.isArray(parsedConfirmations) ? parsedConfirmations : [];
+    const confirmedAt = new Date().toISOString();
+    const confirmation = {
+        id: `LOCAL-${String(confirmations.length + 1).padStart(4, "0")}`,
+        booking_id: booking.id,
+        booking_reference: booking.reference || booking.id,
+        email: booking.email,
+        storage: booking.storage || "browser-json",
+        status: "confirmed",
+        confirmed_at: confirmedAt,
+    };
+
+    confirmations.push(confirmation);
+    window.localStorage.setItem(storageKey, JSON.stringify(confirmations, null, 2));
+    markOfflineBookingConfirmed(booking.id, booking.email, confirmedAt);
+    return {
+        ok: true,
+        id: confirmation.id,
+        status: "confirmed",
+        storage: "browser-json",
+        message: "Booking confirmed locally.",
+    };
+}
+
+function markOfflineBookingConfirmed(bookingId, email, confirmedAt) {
+    const storageKey = "gss_hotel_offline_bookings";
+    const rawBookings = window.localStorage.getItem(storageKey);
+    const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
+    const bookings = Array.isArray(parsedBookings) ? parsedBookings : [];
+    let changed = false;
+
+    bookings.forEach((booking) => {
+        const sameId = String(booking.id) === String(bookingId);
+        const sameEmail = String(booking.email || "").toLowerCase() === String(email || "").toLowerCase();
+
+        if (sameId && sameEmail) {
+            booking.status = "confirmed";
+            booking.confirmed_at = confirmedAt;
+            changed = true;
+        }
+    });
+
+    if (changed) {
+        window.localStorage.setItem(storageKey, JSON.stringify(bookings, null, 2));
+    }
+}
+
+function storeOfflineContact(payload) {
+    const storageKey = "gss_hotel_offline_contacts";
+    const rawContacts = window.localStorage.getItem(storageKey);
+    const parsedContacts = rawContacts ? JSON.parse(rawContacts) : [];
+    const contacts = Array.isArray(parsedContacts) ? parsedContacts : [];
+    const contact = {
+        id: `LOCAL-${String(contacts.length + 1).padStart(4, "0")}`,
+        storage: "browser-json",
+        created_at: new Date().toISOString(),
+        ...payload,
+    };
+
+    contacts.push(contact);
+    window.localStorage.setItem(storageKey, JSON.stringify(contacts, null, 2));
+    return {
+        ok: true,
+        id: contact.id,
+        storage: contact.storage,
+        message: "Message saved locally.",
     };
 }
 
@@ -282,6 +397,8 @@ function setupBookingDates(form) {
 
 function showBookingConfirmation({ data, form, messageElement, payload, successText }) {
     const confirmation = document.querySelector("#booking-confirmation");
+    const confirmButton = document.querySelector("#confirm-booking-button");
+    const confirmStatus = document.querySelector("#booking-confirm-status");
 
     if (!confirmation) {
         form.reset();
@@ -298,10 +415,25 @@ function showBookingConfirmation({ data, form, messageElement, payload, successT
     const room = `${formatRoomType(payload.room_type)} for ${payload.guests} guest${payload.guests === "1" ? "" : "s"}`;
     const contact = `${payload.name} - ${payload.email}`;
 
+    confirmation.dataset.bookingId = data.id || "";
+    confirmation.dataset.bookingReference = reference;
+    confirmation.dataset.bookingEmail = payload.email;
+    confirmation.dataset.bookingStorage = data.storage || "database";
+
     document.querySelector("#confirmation-reference").textContent = reference;
     document.querySelector("#confirmation-dates").textContent = dates;
     document.querySelector("#confirmation-room").textContent = room;
     document.querySelector("#confirmation-contact").textContent = contact;
+
+    if (confirmStatus) {
+        confirmStatus.textContent = "Ready for guest confirmation.";
+        confirmStatus.classList.remove("is-confirmed", "is-error");
+    }
+
+    if (confirmButton) {
+        confirmButton.disabled = false;
+        confirmButton.textContent = "Confirm booking";
+    }
 
     form.reset();
     form.hidden = true;
@@ -312,19 +444,85 @@ function showBookingConfirmation({ data, form, messageElement, payload, successT
 
 function setupBookingConfirmationReset(form) {
     const confirmation = document.querySelector("#booking-confirmation");
-    const button = document.querySelector("#new-booking-button");
+    const newBookingButton = document.querySelector("#new-booking-button");
+    const confirmButton = document.querySelector("#confirm-booking-button");
+    const confirmStatus = document.querySelector("#booking-confirm-status");
     const message = document.querySelector("#booking-message");
 
-    if (!confirmation || !button) {
+    if (!confirmation || !newBookingButton) {
         return;
     }
 
-    button.addEventListener("click", () => {
+    if (confirmButton) {
+        confirmButton.addEventListener("click", async () => {
+            const booking = {
+                id: confirmation.dataset.bookingId,
+                reference: confirmation.dataset.bookingReference,
+                email: confirmation.dataset.bookingEmail,
+                storage: confirmation.dataset.bookingStorage,
+            };
+
+            if (!booking.id || !booking.email) {
+                if (confirmStatus) {
+                    confirmStatus.textContent = "Booking details are missing. Please submit the request again.";
+                    confirmStatus.classList.add("is-error");
+                }
+                return;
+            }
+
+            confirmButton.disabled = true;
+            confirmButton.textContent = "Confirming...";
+
+            try {
+                await confirmStoredBooking(booking);
+
+                if (confirmStatus) {
+                    confirmStatus.textContent = "Booking confirmed. Keep the reference for check-in.";
+                    confirmStatus.classList.add("is-confirmed");
+                    confirmStatus.classList.remove("is-error");
+                }
+
+                confirmButton.textContent = "Booking confirmed";
+            } catch (error) {
+                try {
+                    storeOfflineBookingConfirmation(booking);
+
+                    if (confirmStatus) {
+                        confirmStatus.textContent = "Booking confirmed locally. The hotel can sync it when the backend is available.";
+                        confirmStatus.classList.add("is-confirmed");
+                        confirmStatus.classList.remove("is-error");
+                    }
+
+                    confirmButton.textContent = "Booking confirmed";
+                } catch (storageError) {
+                    confirmButton.disabled = false;
+                    confirmButton.textContent = "Confirm booking";
+
+                    if (confirmStatus) {
+                        confirmStatus.textContent = "Unable to confirm right now. Please try again.";
+                        confirmStatus.classList.add("is-error");
+                        confirmStatus.classList.remove("is-confirmed");
+                    }
+                }
+            }
+        });
+    }
+
+    newBookingButton.addEventListener("click", () => {
         confirmation.hidden = true;
         form.hidden = false;
         form.reset();
         setBookingStep(form, 0);
         updateStaySummary(form);
+        delete confirmation.dataset.bookingId;
+        delete confirmation.dataset.bookingReference;
+        delete confirmation.dataset.bookingEmail;
+        delete confirmation.dataset.bookingStorage;
+
+        if (confirmStatus) {
+            confirmStatus.textContent = "Ready for guest confirmation.";
+            confirmStatus.classList.remove("is-confirmed", "is-error");
+        }
 
         if (message) {
             message.hidden = true;

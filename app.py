@@ -17,6 +17,10 @@ from database import Database, load_env
 BASE_DIR = Path(__file__).resolve().parent
 BOOKINGS_JSON_PATH = BASE_DIR / "instance" / "bookings.json"
 BOOKINGS_JSON_LOCK = Lock()
+BOOKING_CONFIRMATIONS_JSON_PATH = BASE_DIR / "instance" / "booking_confirmations.json"
+BOOKING_CONFIRMATIONS_JSON_LOCK = Lock()
+CONTACTS_JSON_PATH = BASE_DIR / "instance" / "contacts.json"
+CONTACTS_JSON_LOCK = Lock()
 
 
 def create_app() -> Flask:
@@ -97,6 +101,32 @@ def create_app() -> Flask:
             }
         ), 201
 
+    @app.post("/api/bookings/confirm")
+    def confirm_booking():
+        payload = _request_payload()
+        errors = _validate_booking_confirmation(payload)
+
+        if errors:
+            return jsonify({"ok": False, "errors": errors}), 400
+
+        confirmation = _save_booking_confirmation(
+            {
+                "booking_id": _booking_id_from_reference(payload["booking_id"]),
+                "booking_reference": str(payload["booking_id"]).strip(),
+                "email": payload["email"].strip(),
+                "storage": str(payload.get("storage", "unknown")).strip() or "unknown",
+            }
+        )
+
+        return jsonify(
+            {
+                "ok": True,
+                "id": confirmation["id"],
+                "status": "confirmed",
+                "message": "Booking confirmed.",
+            }
+        ), 201
+
     @app.post("/api/contact")
     def create_contact():
         payload = _request_payload()
@@ -105,12 +135,28 @@ def create_app() -> Flask:
         if errors:
             return jsonify({"ok": False, "errors": errors}), 400
 
-        contact_id = database.create_contact(
-            name=payload["name"].strip(),
-            email=payload["email"].strip(),
-            message=payload["message"].strip(),
-        )
-        return jsonify({"ok": True, "id": contact_id, "message": "Message received."}), 201
+        contact_data = {
+            "name": payload["name"].strip(),
+            "email": payload["email"].strip(),
+            "message": payload["message"].strip(),
+        }
+
+        try:
+            contact_id = database.create_contact(**contact_data)
+            storage = "database"
+        except Exception as exc:
+            app.logger.warning("Database contact save failed; using JSON fallback: %s", exc)
+            contact_id = _save_contact_to_json(contact_data)
+            storage = "json"
+
+        return jsonify(
+            {
+                "ok": True,
+                "id": contact_id,
+                "storage": storage,
+                "message": "Message received.",
+            }
+        ), 201
 
     return app
 
@@ -178,6 +224,154 @@ def _next_json_booking_id(bookings: list[dict[str, Any]]) -> int:
     return max(numeric_ids, default=0) + 1
 
 
+def _save_booking_confirmation(confirmation_data: dict[str, Any]) -> dict[str, Any]:
+    with BOOKING_CONFIRMATIONS_JSON_LOCK:
+        BOOKING_CONFIRMATIONS_JSON_PATH.parent.mkdir(exist_ok=True)
+        confirmations = _read_json_list(BOOKING_CONFIRMATIONS_JSON_PATH)
+        existing = _find_existing_confirmation(confirmations, confirmation_data)
+
+        if existing is not None:
+            existing["status"] = "confirmed"
+            existing["confirmed_at"] = datetime.now(timezone.utc).isoformat()
+            BOOKING_CONFIRMATIONS_JSON_PATH.write_text(
+                json.dumps(confirmations, indent=2),
+                encoding="utf-8",
+            )
+            _mark_json_booking_confirmed(confirmation_data)
+            return existing
+
+        confirmation = {
+            "id": _next_numeric_json_id(confirmations),
+            "status": "confirmed",
+            "confirmed_at": datetime.now(timezone.utc).isoformat(),
+            **confirmation_data,
+        }
+        confirmations.append(confirmation)
+        BOOKING_CONFIRMATIONS_JSON_PATH.write_text(
+            json.dumps(confirmations, indent=2),
+            encoding="utf-8",
+        )
+        _mark_json_booking_confirmed(confirmation_data)
+        return confirmation
+
+
+def _find_existing_confirmation(
+    confirmations: list[dict[str, Any]],
+    confirmation_data: dict[str, Any],
+) -> dict[str, Any] | None:
+    booking_reference = str(confirmation_data["booking_reference"]).strip().lower()
+    email = str(confirmation_data["email"]).strip().lower()
+
+    for confirmation in confirmations:
+        if (
+            str(confirmation.get("booking_reference", "")).strip().lower() == booking_reference
+            and str(confirmation.get("email", "")).strip().lower() == email
+        ):
+            return confirmation
+
+    return None
+
+
+def _mark_json_booking_confirmed(confirmation_data: dict[str, Any]) -> None:
+    booking_id = confirmation_data.get("booking_id")
+
+    if booking_id is None:
+        return
+
+    with BOOKINGS_JSON_LOCK:
+        bookings = _read_json_bookings()
+        changed = False
+
+        for booking in bookings:
+            if booking.get("id") != booking_id:
+                continue
+
+            if str(booking.get("email", "")).strip().lower() != str(confirmation_data["email"]).strip().lower():
+                continue
+
+            booking["status"] = "confirmed"
+            booking["confirmed_at"] = datetime.now(timezone.utc).isoformat()
+            changed = True
+            break
+
+        if changed:
+            BOOKINGS_JSON_PATH.write_text(json.dumps(bookings, indent=2), encoding="utf-8")
+
+
+def _read_json_list(path: Path) -> list[dict[str, Any]]:
+    if not path.is_file():
+        return []
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+
+    return data if isinstance(data, list) else []
+
+
+def _next_numeric_json_id(items: list[dict[str, Any]]) -> int:
+    numeric_ids: list[int] = []
+
+    for item in items:
+        try:
+            numeric_ids.append(int(item.get("id", 0)))
+        except (TypeError, ValueError):
+            continue
+
+    return max(numeric_ids, default=0) + 1
+
+
+def _booking_id_from_reference(value: Any) -> int | None:
+    reference = str(value).strip()
+    digits = "".join(character for character in reference if character.isdigit())
+
+    if not digits:
+        return None
+
+    return int(digits)
+
+
+def _save_contact_to_json(contact_data: dict[str, Any]) -> int:
+    with CONTACTS_JSON_LOCK:
+        CONTACTS_JSON_PATH.parent.mkdir(exist_ok=True)
+        contacts = _read_json_contacts()
+        next_id = _next_json_contact_id(contacts)
+        contacts.append(
+            {
+                "id": next_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                **contact_data,
+            }
+        )
+        CONTACTS_JSON_PATH.write_text(json.dumps(contacts, indent=2), encoding="utf-8")
+        return next_id
+
+
+def _read_json_contacts() -> list[dict[str, Any]]:
+    if not CONTACTS_JSON_PATH.is_file():
+        return []
+
+    try:
+        data = json.loads(CONTACTS_JSON_PATH.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+
+    return data if isinstance(data, list) else []
+
+
+def _next_json_contact_id(contacts: list[dict[str, Any]]) -> int:
+    numeric_ids: list[int] = []
+
+    for item in contacts:
+        try:
+            numeric_ids.append(int(item.get("id", 0)))
+        except (TypeError, ValueError):
+            continue
+
+    return max(numeric_ids, default=0) + 1
+
+
 def _clean_log_value(value: Any) -> str:
     return " ".join(str(value).strip().split())
 
@@ -232,6 +426,20 @@ def _validate_booking(payload: dict[str, Any]) -> dict[str, str]:
     allowed_rooms = {"deluxe", "executive", "presidential"}
     if str(payload["room_type"]).strip().lower() not in allowed_rooms:
         errors["room_type"] = "Choose a valid room type."
+
+    return errors
+
+
+def _validate_booking_confirmation(payload: dict[str, Any]) -> dict[str, str]:
+    errors: dict[str, str] = {}
+
+    if not str(payload.get("booking_id", "")).strip():
+        errors["booking_id"] = "Booking reference is required."
+
+    if not str(payload.get("email", "")).strip():
+        errors["email"] = "Email is required."
+    elif not _valid_email(payload["email"]):
+        errors["email"] = "Use a valid email address."
 
     return errors
 
