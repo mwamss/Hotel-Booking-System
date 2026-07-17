@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
-from datetime import date
+import json
+from datetime import date, datetime, timezone
 from email.utils import parseaddr
 from pathlib import Path
+from threading import Lock
 from typing import Any
 from urllib.parse import urlparse
 
@@ -13,6 +15,8 @@ from database import Database, load_env
 
 
 BASE_DIR = Path(__file__).resolve().parent
+BOOKINGS_JSON_PATH = BASE_DIR / "instance" / "bookings.json"
+BOOKINGS_JSON_LOCK = Lock()
 
 
 def create_app() -> Flask:
@@ -65,17 +69,33 @@ def create_app() -> Flask:
         if errors:
             return jsonify({"ok": False, "errors": errors}), 400
 
-        booking_id = database.create_booking(
-            check_in=payload["check_in"],
-            check_out=payload["check_out"],
-            room_type=payload["room_type"],
-            guests=int(payload["guests"]),
-            name=payload["name"].strip(),
-            email=payload["email"].strip(),
-            phone=payload["phone"].strip(),
-        )
+        booking_data = {
+            "check_in": payload["check_in"],
+            "check_out": payload["check_out"],
+            "room_type": payload["room_type"].strip().lower(),
+            "guests": int(payload["guests"]),
+            "name": payload["name"].strip(),
+            "email": payload["email"].strip(),
+            "phone": payload["phone"].strip(),
+        }
+
+        try:
+            booking_id = database.create_booking(**booking_data)
+            storage = "database"
+        except Exception as exc:
+            app.logger.warning("Database booking save failed; using JSON fallback: %s", exc)
+            booking_id = _save_booking_to_json(booking_data)
+            storage = "json"
+
         _log_booking_created(app, booking_id, payload)
-        return jsonify({"ok": True, "id": booking_id, "message": "Booking request received."}), 201
+        return jsonify(
+            {
+                "ok": True,
+                "id": booking_id,
+                "storage": storage,
+                "message": "Booking request received.",
+            }
+        ), 201
 
     @app.post("/api/contact")
     def create_contact():
@@ -116,6 +136,46 @@ def _log_booking_created(app: Flask, booking_id: int | None, payload: dict[str, 
         _clean_log_value(payload["check_in"]),
         _clean_log_value(payload["check_out"]),
     )
+
+
+def _save_booking_to_json(booking_data: dict[str, Any]) -> int:
+    with BOOKINGS_JSON_LOCK:
+        BOOKINGS_JSON_PATH.parent.mkdir(exist_ok=True)
+        bookings = _read_json_bookings()
+        next_id = _next_json_booking_id(bookings)
+        bookings.append(
+            {
+                "id": next_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                **booking_data,
+            }
+        )
+        BOOKINGS_JSON_PATH.write_text(json.dumps(bookings, indent=2), encoding="utf-8")
+        return next_id
+
+
+def _read_json_bookings() -> list[dict[str, Any]]:
+    if not BOOKINGS_JSON_PATH.is_file():
+        return []
+
+    try:
+        data = json.loads(BOOKINGS_JSON_PATH.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+
+    return data if isinstance(data, list) else []
+
+
+def _next_json_booking_id(bookings: list[dict[str, Any]]) -> int:
+    numeric_ids: list[int] = []
+
+    for item in bookings:
+        try:
+            numeric_ids.append(int(item.get("id", 0)))
+        except (TypeError, ValueError):
+            continue
+
+    return max(numeric_ids, default=0) + 1
 
 
 def _clean_log_value(value: Any) -> str:

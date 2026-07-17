@@ -31,6 +31,8 @@ A simple hotel booking website now backed by Flask.
 
 If PostgreSQL or MySQL is configured and reachable, the backend will use it and create the required `bookings` and `contacts` tables. If not, `DB_ENGINE=auto` can fall back to `instance/hotel_booking.sqlite3` for local development.
 
+Bookings have an extra JSON fallback: if the Flask app is running but the database cannot save, booking requests are appended to `instance/bookings.json`. If the booking page is opened while Flask is not running, the browser saves the booking JSON in local storage under `gss_hotel_offline_bookings` so the user still gets a confirmation.
+
 ## Database Options
 
 Use `DB_ENGINE` to choose the backend. `DB_ENGINE=auto` tries PostgreSQL first, then MySQL/MariaDB, then SQLite fallback when `SQLITE_FALLBACK=1`.

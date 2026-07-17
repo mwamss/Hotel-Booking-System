@@ -67,10 +67,59 @@ async function submitForm(form, endpoint, messageElement, successText, options =
             showMessage(messageElement, successText, "success");
         }
     } catch (error) {
+        if (isBookingEndpoint(endpoint)) {
+            try {
+                const data = storeOfflineBooking(payload);
+
+                if (typeof options.onSuccess === "function") {
+                    options.onSuccess({
+                        data,
+                        form,
+                        messageElement,
+                        payload,
+                        successText: "Booking saved locally. The hotel can sync it when the backend is available.",
+                    });
+                } else {
+                    form.reset();
+                    showMessage(messageElement, "Booking saved locally.", "success");
+                }
+                return;
+            } catch (storageError) {
+                showMessage(messageElement, "Unable to save this booking locally. Please try again.", "error");
+                return;
+            }
+        }
+
         showMessage(messageElement, networkErrorMessage(), "error");
     } finally {
         setFormBusy(form, false);
     }
+}
+
+function isBookingEndpoint(endpoint) {
+    return /\/api\/bookings$/i.test(endpoint);
+}
+
+function storeOfflineBooking(payload) {
+    const storageKey = "gss_hotel_offline_bookings";
+    const rawBookings = window.localStorage.getItem(storageKey);
+    const parsedBookings = rawBookings ? JSON.parse(rawBookings) : [];
+    const bookings = Array.isArray(parsedBookings) ? parsedBookings : [];
+    const booking = {
+        id: `LOCAL-${String(bookings.length + 1).padStart(4, "0")}`,
+        storage: "browser-json",
+        created_at: new Date().toISOString(),
+        ...payload,
+    };
+
+    bookings.push(booking);
+    window.localStorage.setItem(storageKey, JSON.stringify(bookings, null, 2));
+    return {
+        ok: true,
+        id: booking.id,
+        storage: booking.storage,
+        message: "Booking saved locally.",
+    };
 }
 
 function apiEndpoint(endpoint) {
@@ -240,7 +289,11 @@ function showBookingConfirmation({ data, form, messageElement, payload, successT
         return;
     }
 
-    const reference = data.id ? `GSS-${String(data.id).padStart(4, "0")}` : "Pending";
+    const reference = data.storage === "browser-json" && data.id
+        ? data.id
+        : data.id
+            ? `GSS-${String(data.id).padStart(4, "0")}`
+            : "Pending";
     const dates = `${formatDisplayDate(payload.check_in)} to ${formatDisplayDate(payload.check_out)}`;
     const room = `${formatRoomType(payload.room_type)} for ${payload.guests} guest${payload.guests === "1" ? "" : "s"}`;
     const contact = `${payload.name} - ${payload.email}`;
